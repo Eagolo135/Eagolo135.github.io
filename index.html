@@ -1,0 +1,89 @@
+---
+layout: default
+title: Home
+---
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <h1>{{ site.data.site.name }}</h1>
+        <p>{{ site.data.site.tagline }}</p>
+        <div class="hero-buttons">
+            <a href="{{ '/projects/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.hero.button_projects }}</a>
+            <a href="{{ '/book/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.home.hero.button_book }}</a>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section>
+    <div class="container">
+        <div class="section-title">
+            <h2>{{ site.data.site.pages.home.about_title }}</h2>
+        </div>
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <p style="font-size: 1.125rem;">{{ site.data.site.about }}</p>
+        </div>
+    </div>
+</section>
+
+<!-- Services Preview -->
+<section style="background-color: var(--bg-light);">
+    <div class="container">
+        <div class="section-title">
+            <h2>{{ site.data.site.pages.home.services_title }}</h2>
+            <p>{{ site.data.site.pages.home.services_subtitle }}</p>
+        </div>
+        <div class="services-grid">
+            {% for service in site.data.site.services limit:3 %}
+            <div class="service-card">
+                <div class="service-icon">{{ service.icon }}</div>
+                <h3>{{ service.title }}</h3>
+                <p>{{ service.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ '/services/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.services_button }}</a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Projects -->
+<section>
+    <div class="container">
+        <div class="section-title">
+            <h2>{{ site.data.site.pages.home.projects_title }}</h2>
+            <p>{{ site.data.site.pages.home.projects_subtitle }}</p>
+        </div>
+        <div class="projects-grid">
+            {% for project in site.data.site.projects limit:3 %}
+            <div class="project-card">
+                <div class="project-content">
+                    <h3>{{ project.title }}</h3>
+                    <p>{{ project.description }}</p>
+                    <div class="project-stack">
+                        {% for tech in project.stack %}
+                        <span class="stack-tag">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ '/projects/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.projects_button }}</a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section style="background-color: var(--bg-light);">
+    <div class="container">
+        <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+            <h2>{{ site.data.site.pages.home.cta_heading }}</h2>
+            <p style="font-size: 1.125rem; margin-bottom: 2rem;">{{ site.data.site.booking_text }}</p>
+            <a href="{{ '/book/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.cta_button }}</a>
+        </div>
+    </div>
+</section>

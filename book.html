@@ -1,0 +1,76 @@
+---
+layout: default
+title: Book a Call
+permalink: /book/
+---
+
+<!-- Page Header -->
+<section class="hero">
+    <div class="container">
+        <h1>{{ site.data.site.pages.book.hero_title }}</h1>
+        <p>{{ site.data.site.pages.book.hero_subtitle }}</p>
+    </div>
+</section>
+
+<!-- Booking Section -->
+<section>
+    <div class="container">
+        <div class="book-content">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2>{{ site.data.site.pages.book.main_heading }}</h2>
+                <p>{{ site.data.site.booking_text }}</p>
+            </div>
+            
+            <!-- Cal.com Embed -->
+            <div id="cal-embed" style="width:100%;height:100%;overflow:scroll;min-height:600px;"></div>
+            <script type="text/javascript">
+              (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.q) { cal.q = []; } p(cal, ar); }; let t = d.createElement(A); t.src = L; t.async = 1; d.body.appendChild(t); })(window, "script", "https://app.cal.com/embed/embed.js");
+              Cal("init", {origin:"https://cal.com"});
+              Cal("inline", {
+                elementOrSelector:"#cal-embed",
+                calLink: "{{ site.data.site.cal_username }}/{{ site.data.site.cal_event }}",
+                layout: "month_view"
+              });
+            </script>
+
+            <div style="margin-top: 3rem;">
+                <h3>{{ site.data.site.pages.book.expect_heading }}</h3>
+                <div style="text-align: left; max-width: 600px; margin: 2rem auto;">
+                    {% for step in site.data.site.pages.book.expect_steps %}
+                    <div style="margin: 1.5rem 0;">
+                        <h4 style="color: var(--primary-color);">{{ step.icon }} {{ step.title }}</h4>
+                        <p>{{ step.text }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section style="background-color: var(--bg-light);">
+    <div class="container">
+        <div style="max-width: 700px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">{{ site.data.site.pages.book.faq_heading }}</h2>
+            
+            {% for faq in site.data.site.pages.book.faqs %}
+            <div style="margin: 1.5rem 0;">
+                <h4>{{ faq.question }}</h4>
+                <p>{{ faq.answer }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Alternative Contact -->
+<section>
+    <div class="container">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <h3>{{ site.data.site.pages.book.alt_heading }}</h3>
+            <p style="margin-bottom: 1.5rem;">{{ site.data.site.pages.book.alt_text }} <a href="mailto:{{ site.data.site.email }}" style="font-weight: 600;">{{ site.data.site.email }}</a></p>
+            <a href="{{ '/contact/' | relative_url }}" class="btn btn-outline" style="background-color: var(--white); color: var(--primary-color); border-color: var(--primary-color);">{{ site.data.site.pages.book.alt_button }}</a>
+        </div>
+    </div>
+</section>

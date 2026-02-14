@@ -1,0 +1,32 @@
+# Jekyll Configuration
+
+# Site settings
+title: "AI Consultant - Transform Your Business with AI"
+description: "Professional AI consulting services to help businesses leverage artificial intelligence for innovation and growth"
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site
+
+# Build settings
+markdown: kramdown
+permalink: pretty
+
+# Exclude files
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"

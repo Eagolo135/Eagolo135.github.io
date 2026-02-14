@@ -1,0 +1,169 @@
+# Site Information
+name: "AI Consultant"
+title: "AI Consultant - Transform Your Business with AI"
+tagline: "Empowering businesses with intelligent AI solutions"
+
+# About
+about: "I'm an AI consultant specializing in helping businesses leverage artificial intelligence to solve complex problems, automate processes, and drive innovation. With expertise in machine learning, natural language processing, and AI strategy, I transform challenges into opportunities."
+
+# Page Content
+pages:
+  home:
+    hero:
+      button_projects: "View Projects"
+      button_book: "Book a Call"
+    about_title: "About"
+    services_title: "Services"
+    services_subtitle: "Comprehensive AI solutions tailored to your needs"
+    services_button: "View All Services"
+    projects_title: "Featured Projects"
+    projects_subtitle: "Recent success stories and client work"
+    projects_button: "View All Projects"
+    cta_heading: "Ready to Transform Your Business with AI?"
+    cta_button: "Schedule Consultation"
+  
+  services:
+    hero_title: "Services"
+    hero_subtitle: "Comprehensive AI solutions to drive your business forward"
+    cta_heading: "Let's Discuss Your Project"
+    cta_text: "Looking for a custom AI solution? Let's talk about how I can help you achieve your goals."
+    cta_button_primary: "Book a Call"
+    cta_button_secondary: "Contact Me"
+  
+  projects:
+    hero_title: "Projects"
+    hero_subtitle: "A showcase of successful AI implementations and client work"
+    link_demo: "View Demo →"
+    link_github: "GitHub →"
+    cta_heading: "Want to Start Your Own Project?"
+    cta_text: "Let's collaborate to build innovative AI solutions that solve real business problems."
+    cta_button_primary: "Schedule Consultation"
+    cta_button_secondary: "View Services"
+  
+  contact:
+    hero_title: "Get in Touch"
+    hero_subtitle: "Let's discuss how AI can transform your business"
+    form_heading: "Send Me a Message"
+    form_name_label: "Name"
+    form_name_placeholder: "Your name"
+    form_email_label: "Email"
+    form_email_placeholder: "your.email@example.com"
+    form_message_label: "Message"
+    form_message_placeholder: "Tell me about your project or inquiry..."
+    form_button: "Send Message"
+    form_or_text: "Or reach out directly"
+    info_heading: "Contact Information"
+    label_email: "Email"
+    label_phone: "Phone"
+    social_heading: "Connect on Social Media"
+    call_heading: "Prefer a Quick Call?"
+    call_button: "Book a Call"
+    response_heading: "Response Time"
+    response_text: "I typically respond to all inquiries within 24 hours. For urgent matters, please mention \"URGENT\" in your subject line or book a call directly."
+  
+  book:
+    hero_title: "Book a Consultation"
+    hero_subtitle: "Let's explore how AI can drive your business success"
+    main_heading: "Free 30-Minute Consultation"
+    main_button: "Schedule Now"
+    expect_heading: "What to Expect"
+    expect_steps:
+      - icon: "📋"
+        title: "Discovery"
+        text: "We'll discuss your business challenges, goals, and current processes to identify AI opportunities."
+      - icon: "💡"
+        title: "Strategy"
+        text: "I'll provide initial insights on how AI can address your specific needs and create value for your business."
+      - icon: "🎯"
+        title: "Next Steps"
+        text: "We'll outline potential solutions, timelines, and next steps if you decide to move forward."
+    faq_heading: "Frequently Asked Questions"
+    faqs:
+      - question: "Is the consultation really free?"
+        answer: "Yes! The initial 30-minute consultation is completely free with no obligations. It's an opportunity for us to explore if we're a good fit."
+      - question: "What should I prepare for the call?"
+        answer: "Come with a general idea of your business challenges or goals. No technical knowledge required – I'll help translate your needs into AI solutions."
+      - question: "What happens after the consultation?"
+        answer: "If we decide to work together, I'll provide a detailed proposal with scope, timeline, and pricing. There's no pressure to commit during the call."
+      - question: "Do you work with businesses of all sizes?"
+        answer: "Yes! I work with startups, SMBs, and enterprises. Each project is tailored to your specific needs and budget."
+    alt_heading: "Prefer to Email Instead?"
+    alt_text: "Feel free to reach out directly at"
+    alt_button: "View Contact Page"
+
+# Services
+services:
+  - title: "AI Strategy & Consulting"
+    description: "Develop comprehensive AI strategies aligned with your business goals. I help identify opportunities, assess feasibility, and create roadmaps for successful AI implementation."
+    icon: "🎯"
+  
+  - title: "Machine Learning Solutions"
+    description: "Design and deploy custom machine learning models tailored to your specific needs. From predictive analytics to recommendation systems, I build solutions that deliver results."
+    icon: "🤖"
+  
+  - title: "Natural Language Processing"
+    description: "Implement NLP solutions including chatbots, sentiment analysis, document processing, and language understanding systems to enhance customer experience and operational efficiency."
+    icon: "💬"
+  
+  - title: "Computer Vision"
+    description: "Develop computer vision applications for image recognition, object detection, video analysis, and visual quality control to automate visual inspection tasks."
+    icon: "👁️"
+  
+  - title: "AI Integration & Deployment"
+    description: "Seamlessly integrate AI models into your existing systems. I ensure smooth deployment, scalability, and maintenance of AI solutions in production environments."
+    icon: "⚙️"
+  
+  - title: "Training & Workshops"
+    description: "Empower your team with AI knowledge through customized training sessions and workshops. Build internal capability to sustain and grow your AI initiatives."
+    icon: "📚"
+
+# Featured Projects
+projects:
+  - title: "E-commerce Recommendation Engine"
+    description: "Built a personalized product recommendation system that increased conversion rates by 35% and average order value by 22% for a major online retailer."
+    stack: ["Python", "TensorFlow", "AWS", "PyTorch"]
+    demo_link: "#"
+    github_link: "#"
+  
+  - title: "Customer Support Chatbot"
+    description: "Developed an intelligent chatbot using NLP that handles 70% of customer inquiries automatically, reducing response time from hours to seconds."
+    stack: ["Python", "OpenAI API", "LangChain", "React"]
+    demo_link: "#"
+    github_link: "#"
+  
+  - title: "Predictive Maintenance System"
+    description: "Created a machine learning system for manufacturing that predicts equipment failures 48 hours in advance, reducing downtime by 60%."
+    stack: ["Python", "Scikit-learn", "Azure ML", "Docker"]
+    demo_link: "#"
+    github_link: "#"
+  
+  - title: "Document Processing Automation"
+    description: "Implemented an AI-powered document extraction system that processes invoices and contracts, achieving 98% accuracy and saving 20 hours per week."
+    stack: ["Python", "OCR", "spaCy", "FastAPI"]
+    demo_link: "#"
+    github_link: "#"
+
+# Contact Information
+email: "contact@aiconsultant.dev"
+phone: "+1 (555) 123-4567"
+formspree_endpoint: "https://formspree.io/f/xpqjpvgn"
+
+# Social Links
+social:
+  - platform: "LinkedIn"
+    url: "https://linkedin.com/in/aiconsultant"
+    icon: "linkedin"
+  
+  - platform: "GitHub"
+    url: "https://github.com/aiconsultant"
+    icon: "github"
+  
+  - platform: "Twitter"
+    url: "https://twitter.com/aiconsultant"
+    icon: "twitter"
+
+# Booking (Cal.com)
+cal_username: "aiconsultant"
+cal_event: "30min"
+booking_link: "https://cal.com/aiconsultant/30min"
+booking_text: "Schedule a free 30-minute consultation to discuss how AI can transform your business."

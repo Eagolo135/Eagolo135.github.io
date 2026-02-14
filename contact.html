@@ -1,0 +1,98 @@
+---
+layout: default
+title: Contact
+permalink: /contact/
+---
+
+<!-- Page Header -->
+<section class="hero">
+    <div class="container">
+        <h1>{{ site.data.site.pages.contact.hero_title }}</h1>
+        <p>{{ site.data.site.pages.contact.hero_subtitle }}</p>
+    </div>
+</section>
+
+<!-- Contact Form Section -->
+<section>
+    <div class="container">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">{{ site.data.site.pages.contact.form_heading }}</h2>
+            
+            <form action="{{ site.data.site.formspree_endpoint }}" method="POST" class="contact-form">
+                <div class="form-group">
+                    <label for="name">{{ site.data.site.pages.contact.form_name_label }}</label>
+                    <input type="text" id="name" name="name" placeholder="{{ site.data.site.pages.contact.form_name_placeholder }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">{{ site.data.site.pages.contact.form_email_label }}</label>
+                    <input type="email" id="email" name="email" placeholder="{{ site.data.site.pages.contact.form_email_placeholder }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">{{ site.data.site.pages.contact.form_message_label }}</label>
+                    <textarea id="message" name="message" rows="6" placeholder="{{ site.data.site.pages.contact.form_message_placeholder }}" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">{{ site.data.site.pages.contact.form_button }}</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Divider -->
+<section style="background-color: var(--bg-light); padding: 2rem 0;">
+    <div class="container">
+        <p style="text-align: center; color: var(--text-light); font-size: 1.125rem; margin: 0;">{{ site.data.site.pages.contact.form_or_text }}</p>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section>
+    <div class="container">
+        <div class="contact-content">
+            <div class="contact-info">
+                <h3>{{ site.data.site.pages.contact.info_heading }}</h3>
+                
+                <div class="contact-item">
+                    <h4>{{ site.data.site.pages.contact.label_email }}</h4>
+                    <a href="mailto:{{ site.data.site.email }}">{{ site.data.site.email }}</a>
+                </div>
+                
+                {% if site.data.site.phone %}
+                <div class="contact-item">
+                    <h4>{{ site.data.site.pages.contact.label_phone }}</h4>
+                    <a href="tel:{{ site.data.site.phone }}">{{ site.data.site.phone }}</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="text-align: center; margin: 3rem 0;">
+                <h3>{{ site.data.site.pages.contact.social_heading }}</h3>
+                <div class="social-links" style="justify-content: center; margin-top: 1.5rem; font-size: 1.125rem;">
+                    {% for social in site.data.site.social %}
+                    <a href="{{ social.url }}" target="_blank" rel="noopener" style="padding: 0.5rem 1rem; background-color: var(--bg-light); border-radius: 0.375rem; font-weight: 500;">
+                        {{ social.platform }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="background-color: var(--bg-light); padding: 2rem; border-radius: 0.5rem; margin-top: 2rem;">
+                <h3>{{ site.data.site.pages.contact.call_heading }}</h3>
+                <p style="margin-bottom: 1.5rem;">{{ site.data.site.booking_text }}</p>
+                <a href="{{ '/book/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.contact.call_button }}</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Additional Info -->
+<section style="background-color: var(--bg-light);">
+    <div class="container">
+        <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+            <h2>{{ site.data.site.pages.contact.response_heading }}</h2>
+            <p style="font-size: 1.125rem;">{{ site.data.site.pages.contact.response_text }}</p>
+        </div>
+    </div>
+</section>

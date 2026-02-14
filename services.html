@@ -1,0 +1,42 @@
+---
+layout: default
+title: Services
+permalink: /services/
+---
+
+<!-- Page Header -->
+<section class="hero">
+    <div class="container">
+        <h1>{{ site.data.site.pages.services.hero_title }}</h1>
+        <p>{{ site.data.site.pages.services.hero_subtitle }}</p>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section>
+    <div class="container">
+        <div class="services-grid">
+            {% for service in site.data.site.services %}
+            <div class="service-card">
+                <div class="service-icon">{{ service.icon }}</div>
+                <h3>{{ service.title }}</h3>
+                <p>{{ service.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section style="background-color: var(--bg-light);">
+    <div class="container">
+        <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+            <h2>{{ site.data.site.pages.services.cta_heading }}</h2>
+            <p style="font-size: 1.125rem; margin-bottom: 2rem;">{{ site.data.site.pages.services.cta_text }}</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ '/book/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.services.cta_button_primary }}</a>
+                <a href="{{ '/contact/' | relative_url }}" class="btn btn-outline" style="background-color: var(--white); color: var(--primary-color); border-color: var(--primary-color);">{{ site.data.site.pages.services.cta_button_secondary }}</a>
+            </div>
+        </div>
+    </div>
+</section>
