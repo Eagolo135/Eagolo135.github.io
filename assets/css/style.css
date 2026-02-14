@@ -408,7 +408,8 @@ section {
 }
 
 /* Cal.com Embed */
-#cal-embed {
+#cal-embed,
+.cal-inline-embed {
     background-color: var(--white);
     border-radius: 0.5rem;
     box-shadow: var(--shadow-lg);

@@ -22,16 +22,41 @@ permalink: /book/
             </div>
             
             <!-- Cal.com Embed -->
-            <div id="cal-embed" style="width:100%;height:100%;overflow:scroll;min-height:600px;"></div>
+            <div class="cal-inline-embed" style="width:100%;height:100%;overflow:scroll;min-height:700px;"></div>
             <script type="text/javascript">
-              (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.q) { cal.q = []; } p(cal, ar); }; let t = d.createElement(A); t.src = L; t.async = 1; d.body.appendChild(t); })(window, "script", "https://app.cal.com/embed/embed.js");
+              (function (C, A, L) { 
+                let p = function (a, ar) { a.q.push(ar); }; 
+                let d = C.document; 
+                C.Cal = C.Cal || function () { 
+                  let cal = C.Cal; 
+                  let ar = arguments; 
+                  if (!cal.q) { cal.q = []; } 
+                  p(cal, ar); 
+                }; 
+                let t = d.createElement(A); 
+                t.src = L; 
+                t.async = 1; 
+                d.head.appendChild(t);
+              })(window, "script", "https://app.cal.com/embed/embed.js");
+              
               Cal("init", {origin:"https://cal.com"});
+              
               Cal("inline", {
-                elementOrSelector:"#cal-embed",
-                calLink: "{{ site.data.site.cal_username }}/{{ site.data.site.cal_event }}",
+                elementOrSelector:".cal-inline-embed",
+                calLink: "nicholas-nelson-vwn6zc/30min",
                 layout: "month_view"
               });
+              
+              Cal("ui", {"styles":{"branding":{"brandColor":"#2563eb"}},"hideEventTypeDetails":false,"layout":"month_view"});
             </script>
+            
+            <!-- Fallback link if embed doesn't load -->
+            <noscript>
+              <div style="text-align: center; padding: 2rem; background-color: var(--bg-light); border-radius: 0.5rem;">
+                <p>JavaScript is required to view the calendar. Please enable JavaScript or</p>
+                <a href="{{ site.data.site.booking_link }}" target="_blank" rel="noopener" class="btn btn-primary">Book on Cal.com</a>
+              </div>
+            </noscript>
 
             <div style="margin-top: 3rem;">
                 <h3>{{ site.data.site.pages.book.expect_heading }}</h3>
