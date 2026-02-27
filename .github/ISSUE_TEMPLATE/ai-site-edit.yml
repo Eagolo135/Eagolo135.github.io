@@ -1,0 +1,29 @@
+name: AI Site Update Request
+description: Request content/design updates that the AI workflow can convert into a PR.
+title: "AI update: "
+labels:
+  - ai-edit
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe exactly what should change on the site.
+
+        Tips:
+        - Mention page names (`index.html`, `services.html`, etc.) if you know them
+        - Include desired copy, tone, and any constraints
+        - Keep one request per issue for best results
+  - type: textarea
+    id: goal
+    attributes:
+      label: What do you want changed?
+      description: Explain the desired update in plain language.
+      placeholder: Update the hero headline to target SaaS founders and add a short CTA about booking a strategy call.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints (optional)
+      description: Anything the AI should not change.
+      placeholder: Don't change colors. Keep page layout and navigation as-is.

@@ -90,6 +90,46 @@ Edit CSS variables in `assets/css/style.css`:
 4. Select the branch to deploy (usually `main`)
 5. Your site will be live at `https://yourusername.github.io`
 
+## Update the Site Through an LLM (GitHub + AI)
+
+This repo includes an optional GitHub Action that lets you request site changes in plain language.
+
+### How it works
+
+- You open or comment on a GitHub Issue labeled `ai-edit`
+- The workflow sends your request + current site files to an LLM
+- The LLM proposes updates to allowed files only
+- A Pull Request is opened automatically for review
+
+### One-time setup
+
+1. In your GitHub repository, go to **Settings → Secrets and variables → Actions**
+2. Add a repository secret named `OPENAI_API_KEY`
+3. (Optional) Add repository variable `OPENAI_MODEL` (default is `gpt-5-mini`)
+4. Ensure GitHub Actions are enabled
+
+### Usage
+
+1. Create a new issue using the **AI Site Update Request** template
+2. Add label `ai-edit` (the template does this automatically)
+3. Describe what you want changed
+4. Wait for the workflow to open a PR
+5. Review and merge
+
+To refine changes, comment on the same issue (or add a comment starting with `/ai`) and the workflow will open/update a fresh PR run.
+
+### Safety boundaries
+
+The automation only edits existing content files in this site:
+
+- `index.html`, `services.html`, `projects.html`, `contact.html`, `book.html`
+- `_data/site.yml`
+- `_layouts/default.html`
+- `assets/css/style.css`
+- `_config.yml`
+
+It will not modify workflow files, scripts, or arbitrary repository paths.
+
 ## Pages Overview
 
 ### Home Page

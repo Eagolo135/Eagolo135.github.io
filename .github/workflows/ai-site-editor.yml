@@ -1,0 +1,79 @@
+name: AI Site Editor
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  ai-edit:
+    if: contains(github.event.issue.labels.*.name, 'ai-edit')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate edits from LLM
+        id: ai
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5-mini' }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: python .github/scripts/ai_site_editor.py
+
+      - name: Create pull request
+        id: cpr
+        if: steps.ai.outputs.ai_noop != 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: ${{ steps.ai.outputs.ai_commit_message }}
+          title: ${{ steps.ai.outputs.ai_pr_title }}
+          body: |
+            Automated site update from AI request.
+
+            ${{ steps.ai.outputs.ai_summary }}
+          branch: ai-edit/issue-${{ github.event.issue.number }}-${{ github.run_id }}
+          delete-branch: true
+          labels: ai-edit
+
+      - name: Comment when no changes are needed
+        if: steps.ai.outputs.ai_noop == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "I couldn't find a safe/valid content edit to apply from that request. Try being more specific about which section or file should change."
+            });
+
+      - name: Comment with PR link
+        if: steps.ai.outputs.ai_noop != 'true' && steps.cpr.outputs.pull-request-url != ''
+        uses: actions/github-script@v7
+        env:
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+        with:
+          script: |
+            const url = process.env.PR_URL;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ Proposed update ready: ${url}`
+            });
