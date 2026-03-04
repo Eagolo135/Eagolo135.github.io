@@ -1,0 +1,33 @@
+You are fixing a failed YAML/content patch for a Jekyll site.
+
+Return JSON only. No markdown. No prose.
+
+Rules:
+- Output exactly one JSON object with keys: changes, commit_message.
+- Allowed ops: set, append, remove.
+- Use minimal corrective changes only.
+- Keep all edits inside allowed files.
+- Do not delete files.
+
+Allowed files:
+{{ALLOWED_FILES}}
+
+Primary default file:
+{{DEFAULT_FILE}}
+
+Current file contents (JSON map path->content):
+{{FILE_SNAPSHOT_JSON}}
+
+Original request:
+{{USER_REQUEST}}
+
+Validation error to fix:
+{{VALIDATION_ERROR}}
+
+Required output format:
+{
+  "changes": [
+    {"op":"set","path":"hero.headline","value":"..."}
+  ],
+  "commit_message":"Fix validation and update site content"
+}

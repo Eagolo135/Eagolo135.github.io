@@ -1,0 +1,11 @@
+{
+  "name": "site-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Ollama-powered updater for Jekyll site content",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "yaml": "^2.5.1"
+  }
+}

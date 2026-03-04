@@ -130,6 +130,71 @@ The automation only edits existing content files in this site:
 
 It will not modify workflow files, scripts, or arbitrary repository paths.
 
+## Local CLI: site-agent (Ollama)
+
+Use the local `site-agent` CLI to update site content from natural language without GitHub UI steps.
+
+### What it does
+
+- Reads your request from command line text
+- Calls local Ollama (`http://localhost:11434/api/generate`) with `stream: false`
+- Forces strict JSON patch output (`changes` + `commit_message`)
+- Applies patch operations (`set`, `append`, optional `remove`) to allowed YAML files only
+- Always validates YAML parsing
+- Runs `bundle exec jekyll build` when `bundle` exists
+- If `bundle` is unavailable, warns and continues with YAML-only validation
+- If build fails, asks Ollama for a fix patch and retries (max 3 attempts)
+- If validation passes, commits and pushes to `main`
+
+### Hard safety boundaries
+
+- Ollama only (no paid API keys, no OpenAI API)
+- Default model: `qwen2.5:7b` (override with `SITE_AGENT_MODEL`)
+- Never edits generated HTML output
+- Only edits configured content files (`_data/site.yml` by default if present, else `site.yml`)
+- Aborts if files outside allowed content file(s) are modified
+- Does not delete files or modify GitHub Actions workflows
+
+### Install
+
+Install the local dependency once:
+
+```powershell
+cd .\tools\site-agent
+npm install
+cd ..\..
+```
+
+### Run it
+
+PowerShell:
+
+```powershell
+.\site-agent.ps1 "Change my hero headline to AI Solutions That Drive Revenue and publish"
+```
+
+CMD:
+
+```cmd
+site-agent.cmd "Add one new service about AI automation audits with a short description"
+```
+
+### Configuration (optional)
+
+- `SITE_AGENT_MODEL` (default: `qwen2.5:7b`)
+- `SITE_AGENT_OLLAMA_URL` (default: `http://localhost:11434/api/generate`)
+- `SITE_AGENT_CONTENT_FILE` (default: `_data/site.yml`)
+- `SITE_AGENT_THEME_FILE` (optional second editable file)
+- `SITE_AGENT_BUILD_CMD` (default: `bundle exec jekyll build`)
+
+Example:
+
+```powershell
+$env:SITE_AGENT_MODEL = "qwen2.5:7b"
+$env:SITE_AGENT_BUILD_CMD = "bundle exec jekyll build"
+.\site-agent.ps1 "Refresh the about section copy to be more concise and results-focused"
+```
+
 ## Pages Overview
 
 ### Home Page
