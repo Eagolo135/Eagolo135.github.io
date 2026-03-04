@@ -1,6 +1,6 @@
 name: AI Consultant
-title: AI Consultant - Transform Your Business with AI
-tagline: Empowering businesses with intelligent AI solutions
+title: AI Consultant — Minimal AI, Maximum Impact
+tagline: Simple. Powerful. Intelligent.
 about: I'm an AI consultant specializing in helping businesses leverage
   artificial intelligence to solve complex problems, automate processes, and
   drive innovation. With expertise in machine learning, natural language
@@ -8,8 +8,8 @@ about: I'm an AI consultant specializing in helping businesses leverage
 pages:
   home:
     hero:
-      button_projects: View Projects
-      button_book: Book a Call
+      button_projects: See Work
+      button_book: Book
     about_title: About
     services_title: Services
     services_subtitle: Comprehensive AI solutions tailored to your needs
@@ -18,7 +18,7 @@ pages:
     projects_subtitle: Recent success stories and client work
     projects_button: View All Projects
     cta_heading: Ready to Supercharge Your Business with AI?
-    cta_button: Schedule Consultation
+    cta_button: Get Started
   services:
     hero_title: Services
     hero_subtitle: Comprehensive AI solutions to drive your business forward
