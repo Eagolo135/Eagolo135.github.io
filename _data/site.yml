@@ -177,6 +177,16 @@ projects:
       - FastAPI
     demo_link: "#"
     github_link: "#"
+  - title: AI Sales Copilot
+    description: Built an AI assistant that drafts personalized outreach and
+      increased qualified meetings by 28 percent
+    stack:
+      - Python
+      - FastAPI
+      - OpenAI API
+      - PostgreSQL
+    demo_link: "#"
+    github_link: "#"
 email: nicholasnelson1203@gmail.com
 phone: (862) 224-7718
 formspree_endpoint: https://formspree.io/f/xpqjpvgn
