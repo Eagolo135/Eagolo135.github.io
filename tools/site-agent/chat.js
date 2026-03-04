@@ -76,6 +76,15 @@ function looksLikeEditRequest(input) {
     'remove',
     'theme',
     'color',
+    'redesign',
+    'rework',
+    'makeover',
+    'modernize',
+    'ui',
+    'ux',
+    'gradient',
+    'effects',
+    'graphics',
     'font',
     'spacing',
     'button',
@@ -196,8 +205,8 @@ async function main() {
 
     try {
       if (!looksLikeEditRequest(input) && !pendingRequest) {
-        console.log('[site-agent] I can help with site edits. Tell me what to change, then I will ask for confirmation before applying.');
-        console.log('           Example: "change the primary color to #14b8a6"');
+        console.log('[site-agent] I can help with full site design edits and makeovers.');
+        console.log('           Example: "give my site a high-level modern redesign with advanced UI effects"');
         console.log('');
         continue;
       }

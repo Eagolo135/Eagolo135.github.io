@@ -12,10 +12,11 @@ Rules:
 - Output exactly one JSON object with keys: changes, commit_message
 - YAML ops: set, append, remove (requires path)
 - Text ops for CSS/HTML: replace_text (requires find + replace), append_text (requires value), set_file_content (requires value)
-- Use minimal corrective changes only
+- Preserve intent level: if original request is redesign/makeover, keep bold multi-file changes while fixing the failure
 - NEVER include filenames or file paths inside the "path" field
 - Keep all edits inside allowed files
 - Do not delete files
+- For advanced design requests, you may use gradients, modern effects, stronger typography, and structural layout improvements
 
 Allowed files: {{ALLOWED_FILES}}
 Default file: {{DEFAULT_FILE}}

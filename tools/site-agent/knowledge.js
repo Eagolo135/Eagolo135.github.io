@@ -64,6 +64,15 @@ When user mentions:
 - "button style" → theme.buttons.*
 - "phone", "email", "services", "projects" → root YAML fields (not theme)
 - "navigation", "header", "footer" → _layouts/default.html (HTML structure only)
+- "makeover", "redesign", "rework", "modernize", "advanced UI" → full multi-file design overhaul (theme + CSS + layout/page structure)
+
+## Redesign Autonomy
+For makeover/redesign requests, proactively:
+- Apply cohesive visual direction across colors, typography, spacing, and component styling
+- Introduce advanced effects (gradients, layered shadows, soft glows, depth) when appropriate
+- Improve page hierarchy and structure for better UX
+- Add supportive imagery patterns (hero visuals, section visuals, decorative backgrounds)
+- Make responsive-friendly decisions without requiring per-detail user instructions
 
 ## Clarification Triggers
 
@@ -71,6 +80,8 @@ Ask for clarification when:
 - Color request without specific value (e.g., "change the color" - to what?)
 - Multiple colors mentioned without specifying which (primary vs secondary)
 - Vague requests like "make it look better"
+
+Do NOT over-ask for clarification on redesign/makeover requests; assume user wants high-creativity execution.
 `;
 
 /**

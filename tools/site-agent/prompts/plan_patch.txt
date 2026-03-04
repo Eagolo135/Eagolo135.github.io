@@ -82,13 +82,26 @@ Top-level YAML keys: {{TOP_LEVEL_KEYS}}
 
 ## Operation Types
 - YAML ops: set, append, remove (use "path" field)
-- Text ops: replace_text (for HTML structure changes only)
+- Text ops: replace_text, append_text, set_file_content
+
+## MAKEOVER MODE (high freedom)
+If user asks for words like: "makeover", "redesign", "rework", "modernize", "high level", "advanced UI", "take liberties"
+then you should switch to MAKEOVER MODE:
+- Make broad, coordinated multi-file changes (not tiny edits)
+- Use gradients, modern shadows, depth, motion, and richer visuals where appropriate
+- Upgrade typography and spacing system for premium look
+- Reformat page structure for stronger hierarchy and conversion flow
+- Add supportive visual media references (hero imagery, section imagery, decorative backgrounds)
+- Prefer responsive patterns and modern layout approaches
+- You are encouraged to be bold and creative
 
 ## Rules
 - Output JSON with keys: changes, commit_message
-- ALL cosmetic changes go to theme.* paths
-- Keep edits minimal
-- For multiple related changes (e.g., color scheme), batch them
+- ALL cosmetic changes should prioritize theme.* paths, and use HTML/CSS text ops when structural or advanced visual effects are needed
+- For normal requests: make focused edits
+- For MAKEOVER MODE requests: make a complete, cohesive redesign across relevant files
+- Prefer multi-file coordinated changes for advanced design requests
+- You may introduce gradients, modern visual effects, stronger component styling, and improved content hierarchy without explicit per-effect instruction
 
 Allowed files: {{ALLOWED_FILES}}
 Default YAML file: {{DEFAULT_FILE}}
@@ -110,3 +123,6 @@ Example - change color scheme:
 
 Example - change font:
 {"changes":[{"op":"set","path":"theme.typography.font_family","value":"'Inter', sans-serif"}],"commit_message":"Switch to Inter font"}
+
+Example - full redesign:
+{"changes":[{"op":"set","path":"theme.colors.primary","value":"#5b8cff"},{"op":"set","path":"theme.colors.primary_dark","value":"#3f6fe0"},{"op":"set","path":"theme.colors.bg_light","value":"#0f172a"},{"op":"set","path":"theme.typography.font_family","value":"'Inter', 'Segoe UI', sans-serif"},{"op":"set_file_content","file":"assets/css/style.css","value":"...full modernized CSS with gradients, glass cards, improved spacing and responsive polish..."}],"commit_message":"Perform full modern website makeover"}
