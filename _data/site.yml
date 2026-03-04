@@ -129,6 +129,10 @@ services:
       sessions and workshops. Build internal capability to sustain and grow your
       AI initiatives.
     icon: 📚
+  - title: AI Automation Audits
+    description: Comprehensive review of your existing workflows to identify
+      high-impact automation opportunities using AI
+    icon: 🚀
 projects:
   - title: E-commerce Recommendation Engine
     description: Built a personalized product recommendation system that increased
