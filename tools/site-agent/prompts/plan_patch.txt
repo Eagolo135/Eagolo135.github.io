@@ -4,67 +4,91 @@ Return a single raw JSON object. No markdown. No code fences. No prose.
 ## Site Structure Knowledge
 You have deep knowledge of where things live in this site:
 
-### Content & Theme (_data/site.yml) - use YAML ops (set, append, remove)
+### Content (_data/site.yml) - use YAML ops (set, append, remove)
 - Personal info: name, title, phone, email, location, social_links
 - Hero section: hero_heading, hero_subheading, hero_description
 - Services: services array with title, description, features, icon
 - Projects: projects array with title, description, tags, link, image
 - Contact fields, about text, page content
-- **THEME COLORS** - the `theme` section controls site colors:
-  - theme.primary_color - main brand color (buttons, links, accents)
-  - theme.secondary_color - secondary/supporting color
-  - theme.accent_color - highlight color
-  - theme.neutral_color - background/neutral tones
 
-### Styling (assets/css/style.css) - use text ops (replace_text)
-- CSS structural styles (NOT colors - those are in YAML theme)
-- Typography, component layout rules, spacing
-- border-radius, shadows, transitions
+### COMPLETE THEME SYSTEM (_data/site.yml → theme section)
+ALL visual styling is configurable via YAML - use YAML ops:
+
+**Colors** (theme.colors.*):
+- theme.colors.primary - main brand color (#hex)
+- theme.colors.primary_dark - darker shade for hovers
+- theme.colors.secondary - supporting color
+- theme.colors.accent - highlight color
+- theme.colors.text_dark - main text color
+- theme.colors.text_light - muted text
+- theme.colors.bg_white - main background
+- theme.colors.bg_light - alternate sections
+- theme.colors.border - border color
+
+**Shadows** (theme.shadows.*):
+- theme.shadows.small - subtle shadow
+- theme.shadows.large - prominent shadow
+
+**Typography** (theme.typography.*):
+- theme.typography.font_family - body font
+- theme.typography.font_family_heading - heading font (empty = same as body)
+- theme.typography.line_height - line spacing
+- theme.typography.font_size_base - base font size
+- theme.typography.font_size_h1 through font_size_h4
+- theme.typography.font_size_small
+
+**Layout** (theme.layout.*):
+- theme.layout.container_max_width - max content width
+- theme.layout.section_padding - section vertical padding
+- theme.layout.card_padding - card internal padding
+
+**Borders** (theme.borders.*):
+- theme.borders.radius_small - small rounded corners
+- theme.borders.radius_medium - medium corners
+- theme.borders.radius_large - large corners
+- theme.borders.radius_pill - fully rounded (pill)
+
+**Buttons** (theme.buttons.*):
+- theme.buttons.border_radius - button corner radius
+- theme.buttons.padding - button padding
+- theme.buttons.font_weight - button text weight
+
+**Transitions** (theme.transitions.*):
+- theme.transitions.speed_fast/normal/slow
+- theme.transitions.easing
 
 ### Layout (_layouts/default.html) - use text ops
-- Header, navigation, footer structure
+- Header, navigation, footer HTML structure
 
 ### Pages (index.html, services.html, etc.) - use text ops
 - Page-specific HTML structure
 
-## Routing Rules
-- "color", "theme", "palette" requests → _data/site.yml (theme section)
-- "button style", "rounded", "spacing", "font" → assets/css/style.css  
-- "phone", "email", "services", "projects", "about" → _data/site.yml
-- User does NOT need to specify the file - you determine it from context
+## Routing Rules (IMPORTANT)
+- "color", "theme", "palette", "dark", "light" → theme.colors.*
+- "font", "typography", "text size" → theme.typography.*
+- "rounded", "corners", "radius" → theme.borders.* or theme.buttons.border_radius
+- "shadow" → theme.shadows.*
+- "spacing", "padding", "width" → theme.layout.*
+- "button style" → theme.buttons.*
+- "phone", "email", "services", "projects", "about" → root level YAML fields
+- User does NOT need to specify files - you determine from context
 
 ## YAML Path Rules
 For YAML files, paths are dot-notation keys INSIDE the document:
-  Good: "theme.primary_color", "services[0].title", "phone"
-  BAD: "_data/site.yml.theme" (NEVER include filename in path)
+  Good: "theme.colors.primary", "theme.buttons.border_radius", "services[0].title"
+  BAD: "_data/site.yml.theme" (NEVER include filename)
 
 Top-level YAML keys: {{TOP_LEVEL_KEYS}}
 
 ## Operation Types
-- YAML ops: set, append, remove (use "path" field, targets default YAML file)
-- Text ops: replace_text (use "file", "find", "replace" fields)
-
-## Critical: replace_text Rules
-For replace_text operations, the "find" value MUST be EXACT text from the file:
-- Look at the actual file contents provided below
-- Copy the EXACT characters including spaces, colons, semicolons
-- For CSS properties: include the full line like "    --primary-color: #3498db;"
-- For CSS selectors with styles: include selector + opening brace + property lines
-- NEVER guess at values - use what's actually in the file
-
-Good find pattern (FROM the actual file):
-  "    --primary-color: #3498db;"
-
-Bad find pattern (guessed):
-  "--primary-color: blue;"
+- YAML ops: set, append, remove (use "path" field)
+- Text ops: replace_text (for HTML structure changes only)
 
 ## Rules
 - Output JSON with keys: changes, commit_message
-- Automatically choose the right file based on request type
+- ALL cosmetic changes go to theme.* paths
 - Keep edits minimal
-- For COLOR changes, use YAML ops on theme.primary_color, theme.secondary_color, etc.
-- For CSS structural changes (border-radius, etc.), use replace_text on CSS file
-- ALWAYS copy find patterns exactly from the provided file contents
+- For multiple related changes (e.g., color scheme), batch them
 
 Allowed files: {{ALLOWED_FILES}}
 Default YAML file: {{DEFAULT_FILE}}
@@ -75,14 +99,14 @@ Current file contents:
 User request:
 {{USER_REQUEST}}
 
-Example - color change (YAML theme):
-{"changes":[{"op":"set","path":"theme.primary_color","value":"#0071e3"}],"commit_message":"Update primary color to blue"}
+Example - change primary color:
+{"changes":[{"op":"set","path":"theme.colors.primary","value":"#0071e3"}],"commit_message":"Update primary color to blue"}
 
-Example - content change (YAML):
-{"changes":[{"op":"set","path":"phone","value":"555-1234"}],"commit_message":"Update phone number"}
+Example - make buttons more rounded:
+{"changes":[{"op":"set","path":"theme.buttons.border_radius","value":"9999px"}],"commit_message":"Make buttons pill-shaped"}
 
-Example - CSS structural change:
-{"changes":[{"op":"replace_text","file":"assets/css/style.css","find":"    border-radius: 0.375rem;","replace":"    border-radius: 9999px;"}],"commit_message":"Make buttons more rounded"}
+Example - change color scheme:
+{"changes":[{"op":"set","path":"theme.colors.primary","value":"#4f46e5"},{"op":"set","path":"theme.colors.primary_dark","value":"#4338ca"},{"op":"set","path":"theme.colors.bg_light","value":"#f5f3ff"}],"commit_message":"Update to purple color scheme"}
 
-Example - mixed (color + content):
-{"changes":[{"op":"set","path":"title","value":"AI Consultant"},{"op":"set","path":"theme.primary_color","value":"#1a73e8"}],"commit_message":"Update title and brand color"}
+Example - change font:
+{"changes":[{"op":"set","path":"theme.typography.font_family","value":"'Inter', sans-serif"}],"commit_message":"Switch to Inter font"}

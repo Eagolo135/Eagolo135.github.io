@@ -8,49 +8,69 @@ const SITE_KNOWLEDGE = `
 This Jekyll site has the following file organization:
 
 ### Data Files (YAML content)
-- **_data/site.yml** - Main site content:
+- **_data/site.yml** - Main site content AND visual theme:
   - Personal info: name, title, phone, email, location, social_links
   - Hero section: hero_heading, hero_subheading, hero_description, etc.
   - About text: about_description, about_highlights
   - Services: services array with title, description, features, icon
   - Projects: projects array with title, description, tags, link, image
   - Contact info: contact_* fields
-  - Pages content: any page-specific content blocks
+  
+### THEME SYSTEM (_data/site.yml → theme section)
+ALL visual styling is now configurable via YAML:
 
-### Style Files (CSS)
-- **assets/css/style.css** - All visual styling:
-  - CSS variables in :root { } - colors, shadows, spacing
-  - Color scheme: --primary-color, --primary-dark, --text-dark, --text-light, --bg-light, --border-color
-  - Typography, layout, animations
-  - Component styles
+**Colors** (theme.colors.*):
+- primary, primary_dark - brand colors
+- secondary, accent - supporting colors
+- text_dark, text_light - text colors
+- bg_white, bg_light - backgrounds
+- border - border color
+
+**Typography** (theme.typography.*):
+- font_family, font_family_heading
+- font_size_base, font_size_h1-h4, font_size_small
+- line_height
+
+**Layout** (theme.layout.*):
+- container_max_width, section_padding, card_padding
+
+**Borders** (theme.borders.*):
+- radius_small, radius_medium, radius_large, radius_pill
+
+**Buttons** (theme.buttons.*):
+- border_radius, padding, font_weight
+
+**Shadows** (theme.shadows.*):
+- small, large
+
+**Transitions** (theme.transitions.*):
+- speed_fast, speed_normal, speed_slow, easing
 
 ### Layout Files (HTML templates)
 - **_layouts/default.html** - Base page layout (header, nav, footer)
 
 ### Page Files (HTML)
-- **index.html** - Homepage structure and sections
-- **services.html** - Services page
-- **projects.html** - Projects/portfolio page
-- **contact.html** - Contact page
-- **book.html** - Booking page
+- **index.html** - Homepage structure
+- **services.html**, **projects.html**, **contact.html**, **book.html**
 
 ## Request Routing Guide
 
 When user mentions:
-- "color", "theme", "style", "font", "spacing", "shadow" → assets/css/style.css
-- "phone", "email", "name", "title", "services", "projects", "about" → _data/site.yml
-- "navigation", "header", "footer", "menu" → _layouts/default.html
-- "homepage", "hero", "landing" → index.html or _data/site.yml depending on structure vs content
-- "button text", "heading text", "description" → _data/site.yml (content)
-- "button appearance", "heading size" → assets/css/style.css (styling)
+- "color", "theme", "palette", "dark", "light" → theme.colors.*
+- "font", "typography", "text size" → theme.typography.*
+- "rounded", "corners", "radius" → theme.borders.* or theme.buttons.border_radius
+- "shadow" → theme.shadows.*
+- "spacing", "padding", "width" → theme.layout.*
+- "button style" → theme.buttons.*
+- "phone", "email", "services", "projects" → root YAML fields (not theme)
+- "navigation", "header", "footer" → _layouts/default.html (HTML structure only)
 
 ## Clarification Triggers
 
 Ask for clarification when:
-- Request is ambiguous between content vs style (e.g., "change the button" - color or text?)
-- Multiple interpretations exist (e.g., "update contact" - which contact field?)
-- Request lacks specifics (e.g., "make it look better" - what aspect?)
-- Color/style request without specific values (e.g., "change the color" - to what?)
+- Color request without specific value (e.g., "change the color" - to what?)
+- Multiple colors mentioned without specifying which (primary vs secondary)
+- Vague requests like "make it look better"
 `;
 
 /**
@@ -72,7 +92,7 @@ const CLARIFICATION_PATTERNS = [
   {
     triggers: ['change the button', 'update button'],
     ambiguous: true,
-    question: 'Do you want to change the button text/label or its appearance (color, size)?'
+    question: 'Do you want to change the button text/label or its appearance (color, size, rounded)?'
   },
   {
     triggers: ['update contact', 'change contact'],

@@ -14,14 +14,61 @@
     
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
     
-    <!-- Theme colors from _data/site.yml -->
-    {% if site.data.site.theme %}
+    <!-- Dynamic Theme from _data/site.yml -->
+    {% assign t = site.data.site.theme %}
+    {% if t %}
     <style>
       :root {
-        {% if site.data.site.theme.primary_color %}--primary-color: {{ site.data.site.theme.primary_color }};{% endif %}
-        {% if site.data.site.theme.secondary_color %}--secondary-color: {{ site.data.site.theme.secondary_color }};{% endif %}
-        {% if site.data.site.theme.accent_color %}--accent-color: {{ site.data.site.theme.accent_color }};{% endif %}
-        {% if site.data.site.theme.neutral_color %}--bg-light: {{ site.data.site.theme.neutral_color }};{% endif %}
+        /* Colors */
+        {% if t.colors.primary %}--primary-color: {{ t.colors.primary }};{% endif %}
+        {% if t.colors.primary_dark %}--primary-dark: {{ t.colors.primary_dark }};{% endif %}
+        {% if t.colors.secondary %}--secondary-color: {{ t.colors.secondary }};{% endif %}
+        {% if t.colors.accent %}--accent-color: {{ t.colors.accent }};{% endif %}
+        {% if t.colors.text_dark %}--text-dark: {{ t.colors.text_dark }};{% endif %}
+        {% if t.colors.text_light %}--text-light: {{ t.colors.text_light }};{% endif %}
+        {% if t.colors.bg_white %}--white: {{ t.colors.bg_white }};{% endif %}
+        {% if t.colors.bg_light %}--bg-light: {{ t.colors.bg_light }};{% endif %}
+        {% if t.colors.border %}--border-color: {{ t.colors.border }};{% endif %}
+        
+        /* Shadows */
+        {% if t.shadows.small %}--shadow: {{ t.shadows.small }};{% endif %}
+        {% if t.shadows.large %}--shadow-lg: {{ t.shadows.large }};{% endif %}
+        
+        /* Typography */
+        {% if t.typography.font_family %}--font-family: {{ t.typography.font_family }};{% endif %}
+        {% if t.typography.font_family_heading and t.typography.font_family_heading != "" %}--font-family-heading: {{ t.typography.font_family_heading }};{% else %}--font-family-heading: var(--font-family);{% endif %}
+        {% if t.typography.line_height %}--line-height: {{ t.typography.line_height }};{% endif %}
+        {% if t.typography.font_size_base %}--font-size-base: {{ t.typography.font_size_base }};{% endif %}
+        {% if t.typography.font_size_h1 %}--font-size-h1: {{ t.typography.font_size_h1 }};{% endif %}
+        {% if t.typography.font_size_h2 %}--font-size-h2: {{ t.typography.font_size_h2 }};{% endif %}
+        {% if t.typography.font_size_h3 %}--font-size-h3: {{ t.typography.font_size_h3 }};{% endif %}
+        {% if t.typography.font_size_h4 %}--font-size-h4: {{ t.typography.font_size_h4 }};{% endif %}
+        {% if t.typography.font_size_small %}--font-size-small: {{ t.typography.font_size_small }};{% endif %}
+        
+        /* Layout */
+        {% if t.layout.container_max_width %}--container-max-width: {{ t.layout.container_max_width }};{% endif %}
+        {% if t.layout.section_padding %}--section-padding: {{ t.layout.section_padding }};{% endif %}
+        {% if t.layout.card_padding %}--card-padding: {{ t.layout.card_padding }};{% endif %}
+        
+        /* Borders */
+        {% if t.borders.radius_small %}--radius-small: {{ t.borders.radius_small }};{% endif %}
+        {% if t.borders.radius_medium %}--radius-medium: {{ t.borders.radius_medium }};{% endif %}
+        {% if t.borders.radius_large %}--radius-large: {{ t.borders.radius_large }};{% endif %}
+        {% if t.borders.radius_pill %}--radius-pill: {{ t.borders.radius_pill }};{% endif %}
+        
+        /* Buttons */
+        {% if t.buttons.border_radius %}--btn-radius: {{ t.buttons.border_radius }};{% endif %}
+        {% if t.buttons.padding %}--btn-padding: {{ t.buttons.padding }};{% endif %}
+        {% if t.buttons.font_weight %}--btn-font-weight: {{ t.buttons.font_weight }};{% endif %}
+        
+        /* Navbar */
+        {% if t.navbar.padding %}--navbar-padding: {{ t.navbar.padding }};{% endif %}
+        
+        /* Transitions */
+        {% if t.transitions.speed_fast %}--transition-fast: {{ t.transitions.speed_fast }};{% endif %}
+        {% if t.transitions.speed_normal %}--transition-normal: {{ t.transitions.speed_normal }};{% endif %}
+        {% if t.transitions.speed_slow %}--transition-slow: {{ t.transitions.speed_slow }};{% endif %}
+        {% if t.transitions.easing %}--transition-easing: {{ t.transitions.easing }};{% endif %}
       }
     </style>
     {% endif %}
