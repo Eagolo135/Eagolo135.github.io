@@ -1,158 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page.title }} | {{ site.data.site.name }}</title>
-    <meta name="description" content="{{ site.data.site.tagline }}">
-    
-    <!-- Favicons -->
-    <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/favicon-32x32.png' | relative_url }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/favicon-16x16.png' | relative_url }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | relative_url }}">
-    
-    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
-    
-    <!-- Dynamic Theme from _data/site.yml -->
-    {% assign t = site.data.site.theme %}
-    {% if t %}
-    <style>
-      :root {
-        /* Colors */
-        {% if t.colors.primary %}--primary-color: {{ t.colors.primary }};{% endif %}
-        {% if t.colors.primary_dark %}--primary-dark: {{ t.colors.primary_dark }};{% endif %}
-        {% if t.colors.secondary %}--secondary-color: {{ t.colors.secondary }};{% endif %}
-        {% if t.colors.accent %}--accent-color: {{ t.colors.accent }};{% endif %}
-        {% if t.colors.text_dark %}--text-dark: {{ t.colors.text_dark }};{% endif %}
-        {% if t.colors.text_light %}--text-light: {{ t.colors.text_light }};{% endif %}
-        {% if t.colors.bg_white %}--white: {{ t.colors.bg_white }};{% endif %}
-        {% if t.colors.bg_light %}--bg-light: {{ t.colors.bg_light }};{% endif %}
-        {% if t.colors.border %}--border-color: {{ t.colors.border }};{% endif %}
-        
-        /* Shadows */
-        {% if t.shadows.small %}--shadow: {{ t.shadows.small }};{% endif %}
-        {% if t.shadows.large %}--shadow-lg: {{ t.shadows.large }};{% endif %}
-        
-        /* Typography */
-        {% if t.typography.font_family %}--font-family: {{ t.typography.font_family }};{% endif %}
-        {% if t.typography.font_family_heading and t.typography.font_family_heading != "" %}--font-family-heading: {{ t.typography.font_family_heading }};{% else %}--font-family-heading: var(--font-family);{% endif %}
-        {% if t.typography.line_height %}--line-height: {{ t.typography.line_height }};{% endif %}
-        {% if t.typography.font_size_base %}--font-size-base: {{ t.typography.font_size_base }};{% endif %}
-        {% if t.typography.font_size_h1 %}--font-size-h1: {{ t.typography.font_size_h1 }};{% endif %}
-        {% if t.typography.font_size_h2 %}--font-size-h2: {{ t.typography.font_size_h2 }};{% endif %}
-        {% if t.typography.font_size_h3 %}--font-size-h3: {{ t.typography.font_size_h3 }};{% endif %}
-        {% if t.typography.font_size_h4 %}--font-size-h4: {{ t.typography.font_size_h4 }};{% endif %}
-        {% if t.typography.font_size_small %}--font-size-small: {{ t.typography.font_size_small }};{% endif %}
-        
-        /* Layout */
-        {% if t.layout.container_max_width %}--container-max-width: {{ t.layout.container_max_width }};{% endif %}
-        {% if t.layout.section_padding %}--section-padding: {{ t.layout.section_padding }};{% endif %}
-        {% if t.layout.card_padding %}--card-padding: {{ t.layout.card_padding }};{% endif %}
-        
-        /* Borders */
-        {% if t.borders.radius_small %}--radius-small: {{ t.borders.radius_small }};{% endif %}
-        {% if t.borders.radius_medium %}--radius-medium: {{ t.borders.radius_medium }};{% endif %}
-        {% if t.borders.radius_large %}--radius-large: {{ t.borders.radius_large }};{% endif %}
-        {% if t.borders.radius_pill %}--radius-pill: {{ t.borders.radius_pill }};{% endif %}
-        
-        /* Buttons */
-        {% if t.buttons.border_radius %}--btn-radius: {{ t.buttons.border_radius }};{% endif %}
-        {% if t.buttons.padding %}--btn-padding: {{ t.buttons.padding }};{% endif %}
-        {% if t.buttons.font_weight %}--btn-font-weight: {{ t.buttons.font_weight }};{% endif %}
-        
-        /* Navbar */
-        {% if t.navbar.padding %}--navbar-padding: {{ t.navbar.padding }};{% endif %}
-        
-        /* Transitions */
-        {% if t.transitions.speed_fast %}--transition-fast: {{ t.transitions.speed_fast }};{% endif %}
-        {% if t.transitions.speed_normal %}--transition-normal: {{ t.transitions.speed_normal }};{% endif %}
-        {% if t.transitions.speed_slow %}--transition-slow: {{ t.transitions.speed_slow }};{% endif %}
-        {% if t.transitions.easing %}--transition-easing: {{ t.transitions.easing }};{% endif %}
-      }
-    </style>
-    {% endif %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ page.title }} | {{ site.data.site.name }}</title>
+  <meta name="description" content="{{ site.data.site.tagline }}">
+
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+
+  {% assign t = site.data.site.theme %}
+  {% if t %}
+  <style>
+    :root {
+      {% if t.colors.primary %}--primary-color: {{ t.colors.primary }};{% endif %}
+      {% if t.colors.primary_dark %}--primary-dark: {{ t.colors.primary_dark }};{% endif %}
+      {% if t.colors.secondary %}--secondary-color: {{ t.colors.secondary }};{% endif %}
+      {% if t.colors.accent %}--accent-color: {{ t.colors.accent }};{% endif %}
+      {% if t.colors.text_dark %}--text-dark: {{ t.colors.text_dark }};{% endif %}
+      {% if t.colors.text_light %}--text-light: {{ t.colors.text_light }};{% endif %}
+      {% if t.colors.bg_white %}--white: {{ t.colors.bg_white }};{% endif %}
+      {% if t.colors.bg_light %}--bg-light: {{ t.colors.bg_light }};{% endif %}
+      {% if t.colors.border %}--border-color: {{ t.colors.border }};{% endif %}
+
+      {% if t.shadows.small %}--shadow: {{ t.shadows.small }};{% endif %}
+      {% if t.shadows.large %}--shadow-lg: {{ t.shadows.large }};{% endif %}
+
+      {% if t.typography.font_family %}--font-family: {{ t.typography.font_family }};{% endif %}
+      {% if t.typography.font_family_heading and t.typography.font_family_heading != "" %}
+        --font-family-heading: {{ t.typography.font_family_heading }};
+      {% else %}
+        --font-family-heading: var(--font-family);
+      {% endif %}
+      {% if t.typography.line_height %}--line-height: {{ t.typography.line_height }};{% endif %}
+      {% if t.typography.font_size_base %}--font-size-base: {{ t.typography.font_size_base }};{% endif %}
+      {% if t.typography.font_size_h1 %}--font-size-h1: {{ t.typography.font_size_h1 }};{% endif %}
+      {% if t.typography.font_size_h2 %}--font-size-h2: {{ t.typography.font_size_h2 }};{% endif %}
+      {% if t.typography.font_size_h3 %}--font-size-h3: {{ t.typography.font_size_h3 }};{% endif %}
+      {% if t.typography.font_size_h4 %}--font-size-h4: {{ t.typography.font_size_h4 }};{% endif %}
+      {% if t.typography.font_size_small %}--font-size-small: {{ t.typography.font_size_small }};{% endif %}
+
+      {% if t.layout.container_max_width %}--container-max-width: {{ t.layout.container_max_width }};{% endif %}
+      {% if t.layout.section_padding %}--section-padding: {{ t.layout.section_padding }};{% endif %}
+      {% if t.layout.card_padding %}--card-padding: {{ t.layout.card_padding }};{% endif %}
+
+      {% if t.borders.radius_small %}--radius-small: {{ t.borders.radius_small }};{% endif %}
+      {% if t.borders.radius_medium %}--radius-medium: {{ t.borders.radius_medium }};{% endif %}
+      {% if t.borders.radius_large %}--radius-large: {{ t.borders.radius_large }};{% endif %}
+      {% if t.borders.radius_pill %}--radius-pill: {{ t.borders.radius_pill }};{% endif %}
+
+      {% if t.buttons.border_radius %}--btn-radius: {{ t.buttons.border_radius }};{% endif %}
+      {% if t.buttons.padding %}--btn-padding: {{ t.buttons.padding }};{% endif %}
+      {% if t.buttons.font_weight %}--btn-font-weight: {{ t.buttons.font_weight }};{% endif %}
+
+      {% if t.navbar.padding %}--navbar-padding: {{ t.navbar.padding }};{% endif %}
+
+      {% if t.transitions.speed_fast %}--transition-fast: {{ t.transitions.speed_fast }};{% endif %}
+      {% if t.transitions.speed_normal %}--transition-normal: {{ t.transitions.speed_normal }};{% endif %}
+      {% if t.transitions.speed_slow %}--transition-slow: {{ t.transitions.speed_slow }};{% endif %}
+      {% if t.transitions.easing %}--transition-easing: {{ t.transitions.easing }};{% endif %}
+    }
+  </style>
+  {% endif %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="{{ '/' | relative_url }}" class="logo">{{ site.data.site.name }}</a>
-            <button class="nav-toggle" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <ul class="nav-menu">
-                <li><a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Home</a></li>
-                <li><a href="{{ '/services/' | relative_url }}" {% if page.url contains 'services' %}class="active"{% endif %}>Services</a></li>
-                <li><a href="{{ '/projects/' | relative_url }}" {% if page.url contains 'projects' %}class="active"{% endif %}>Projects</a></li>
-                <li><a href="{{ '/contact/' | relative_url }}" {% if page.url contains 'contact' %}class="active"{% endif %}>Contact</a></li>
-                <li><a href="{{ '/book/' | relative_url }}" class="btn-nav {% if page.url contains 'book' %}active{% endif %}">Book a Call</a></li>
-            </ul>
+  <!-- Header -->
+  <div class="header-wrap">
+    <header class="navbar">
+      <div class="container">
+        <a class="logo" href="{{ '/' | relative_url }}">{{ site.data.site.name }}</a>
+
+        <nav>
+          <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+          <ul class="nav-menu">
+            <li><a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Home</a></li>
+            <li><a href="{{ '/services/' | relative_url }}" {% if page.url contains 'services' %}class="active"{% endif %}>Services</a></li>
+            <li><a href="{{ '/projects/' | relative_url }}" {% if page.url contains 'projects' %}class="active"{% endif %}>Projects</a></li>
+            <li><a href="{{ '/contact/' | relative_url }}" {% if page.url contains 'contact' %}class="active"{% endif %}>Contact</a></li>
+          </ul>
+        </nav>
+
+        <div style="display:flex;gap:1rem;align-items:center">
+          <a href="{{ '/book/' | relative_url }}" class="btn-nav">Book a Call</a>
         </div>
-    </nav>
+      </div>
+    </header>
+  </div>
 
-    <!-- Main Content -->
-    <main>
-        {{ content }}
-    </main>
+  <!-- Main -->
+  <main>
+    {{ content }}
+  </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>{{ site.data.site.name }}</h3>
-                    <p>{{ site.data.site.tagline }}</p>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="{{ '/' | relative_url }}">Home</a></li>
-                        <li><a href="{{ '/services/' | relative_url }}">Services</a></li>
-                        <li><a href="{{ '/projects/' | relative_url }}">Projects</a></li>
-                        <li><a href="{{ '/contact/' | relative_url }}">Contact</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h4>Connect</h4>
-                    <div class="social-links">
-                        {% for social in site.data.site.social %}
-                        <a href="{{ social.url }}" target="_blank" rel="noopener" aria-label="{{ social.platform }}">
-                            {{ social.platform }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                    <p class="footer-email">{{ site.data.site.email }}</p>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; {{ 'now' | date: "%Y" }} {{ site.data.site.name }}. All rights reserved.</p>
-            </div>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div>
+          <h3>{{ site.data.site.name }}</h3>
+          <p class="text-muted">{{ site.data.site.tagline }}</p>
         </div>
-    </footer>
 
-    <script>
-        // Mobile navigation toggle
-        const navToggle = document.querySelector('.nav-toggle');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        navToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
-        });
+        <div>
+          <h4>Quick links</h4>
+          <ul style="list-style:none;padding:0;margin:0">
+            <li><a href="{{ '/' | relative_url }}">Home</a></li>
+            <li><a href="{{ '/services/' | relative_url }}">Services</a></li>
+            <li><a href="{{ '/projects/' | relative_url }}">Projects</a></li>
+            <li><a href="{{ '/contact/' | relative_url }}">Contact</a></li>
+          </ul>
+        </div>
 
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
-            }
-        });
-    </script>
+        <div>
+          <h4>Connect</h4>
+          <div class="social-links" style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            {% for social in site.data.site.social %}
+              <a href="{{ social.url }}" target="_blank" rel="noopener">{{ social.platform }}</a>
+            {% endfor %}
+          </div>
+          <p style="margin-top:0.75rem;" class="text-muted">{{ site.data.site.email }}</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; {{ 'now' | date: "%Y" }} {{ site.data.site.name }}. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile nav toggle
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
+        navMenu.style.flexDirection = 'column';
+      });
+    }
+  </script>
 </body>
 </html>
