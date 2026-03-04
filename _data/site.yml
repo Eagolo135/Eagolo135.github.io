@@ -174,7 +174,7 @@ projects:
     demo_link: "#"
     github_link: "#"
 email: contact@aiconsultant.dev
-phone: +1 (555) 123-4567
+phone: "8622247718"
 formspree_endpoint: https://formspree.io/f/xpqjpvgn
 social:
   - platform: LinkedIn
@@ -191,7 +191,3 @@ cal_event: 30min
 booking_link: https://cal.com/nicholas-nelson-vwn6zc/30min
 booking_text: Schedule a free 30-minute consultation to discuss how AI can
   transform your business.
-_data/site:
-  yml:
-    email: ""
-    phone: "8622247718"

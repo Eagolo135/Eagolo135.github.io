@@ -137,20 +137,18 @@ Use the local `site-agent` CLI to update site content from natural language with
 ### What it does
 
 - Reads your request from command line text
-- Calls local Ollama (`http://localhost:11434/api/generate`) with `stream: false`
+- Calls OpenAI API by default (or Ollama if `SITE_AGENT_PROVIDER=ollama`)
 - Forces strict JSON patch output (`changes` + `commit_message`)
 - Applies patch operations (`set`, `append`, optional `remove`) to allowed YAML files only
 - Always validates YAML parsing
 - Runs `bundle exec jekyll build` when `bundle` exists
 - If `bundle` is unavailable, warns and continues with YAML-only validation
-- If build fails, asks Ollama for a fix patch and retries (max 3 attempts)
+- If build fails, asks the LLM for a fix patch and retries (max 3 attempts)
 - If validation passes, commits and pushes to `main`
+- On failure, auto-restores files to clean state
 
 ### Hard safety boundaries
 
-- Ollama only (no paid API keys, no OpenAI API)
-- Default model: `qwen2.5:7b` (override with `SITE_AGENT_MODEL`)
-- Never edits generated HTML output
 - Only edits configured content files (`_data/site.yml` by default if present, else `site.yml`)
 - Aborts if files outside allowed content file(s) are modified
 - Does not delete files or modify GitHub Actions workflows
@@ -181,7 +179,9 @@ site-agent.cmd "Add one new service about AI automation audits with a short desc
 
 ### Configuration (optional)
 
-- `SITE_AGENT_MODEL` (default: `qwen2.5:7b`)
+- `OPENAI_API_KEY` (required for OpenAI provider)
+- `SITE_AGENT_PROVIDER` (default: `openai`, alternative: `ollama`)
+- `SITE_AGENT_MODEL` (default: `gpt-4o-mini` for OpenAI, `llama3.2:1b` for Ollama)
 - `SITE_AGENT_OLLAMA_URL` (default: `http://localhost:11434/api/generate`)
 - `SITE_AGENT_CONTENT_FILE` (default: `_data/site.yml`)
 - `SITE_AGENT_THEME_FILE` (optional second editable file)
@@ -190,8 +190,7 @@ site-agent.cmd "Add one new service about AI automation audits with a short desc
 Example:
 
 ```powershell
-$env:SITE_AGENT_MODEL = "qwen2.5:7b"
-$env:SITE_AGENT_BUILD_CMD = "bundle exec jekyll build"
+$env:OPENAI_API_KEY = "sk-..."
 .\site-agent.ps1 "Refresh the about section copy to be more concise and results-focused"
 ```
 

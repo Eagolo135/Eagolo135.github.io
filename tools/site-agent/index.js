@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
 const path = require('node:path');
-const { generateJsonPlan, DEFAULT_OLLAMA_URL } = require('./ollama');
+const { generateJsonPlan, resolveConfig } = require('./llm');
 const { parsePatch, applyPatchToFiles } = require('./patch');
-const { validateAll } = require('./validate');
+const { validateAll, runCommand } = require('./validate');
 const {
   ensureOnMainBranch,
   ensureCleanWorktree,
@@ -21,8 +21,8 @@ function resolveDefaultContentFile(cwd) {
   return 'site.yml';
 }
 
-function loadPromptTemplate(promptPath) {
-  return fs.readFileSync(promptPath, 'utf8');
+function loadPromptTemplate(name) {
+  return fs.readFileSync(path.join(__dirname, 'prompts', name), 'utf8');
 }
 
 function renderPrompt(template, values) {
@@ -64,6 +64,30 @@ function readAllowedFiles(allowedFiles) {
   return snapshot;
 }
 
+/** Restore allowed files to their git HEAD state (undo failed patch). */
+function restoreFiles(allowedFiles) {
+  for (const file of allowedFiles) {
+    runCommand(`git checkout HEAD -- "${file}"`);
+  }
+}
+
+/** Extract top-level keys from current YAML to help prompt grounding. */
+function extractTopLevelKeys(snapshot) {
+  const YAML = require('yaml');
+  const keys = [];
+  for (const [, text] of Object.entries(snapshot)) {
+    try {
+      const doc = YAML.parse(text);
+      if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
+        keys.push(Object.keys(doc).join(', '));
+      }
+    } catch {
+      // skip
+    }
+  }
+  return keys.join('\n');
+}
+
 async function run() {
   const requestText = process.argv.slice(2).join(' ').trim();
   if (!requestText) {
@@ -71,65 +95,104 @@ async function run() {
   }
 
   const cwd = process.cwd();
-  const model = process.env.SITE_AGENT_MODEL || 'qwen2.5:7b';
-  const ollamaUrl = process.env.SITE_AGENT_OLLAMA_URL || DEFAULT_OLLAMA_URL;
+  const llmConfig = resolveConfig();
   const buildCommand = process.env.SITE_AGENT_BUILD_CMD || 'bundle exec jekyll build';
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
+
+  console.log(`[site-agent] Provider: ${llmConfig.provider}, Model: ${llmConfig.model}`);
+  console.log(`[site-agent] Content file: ${defaultFile}`);
 
   assertAllowedFilesExist(allowedFiles);
   ensureOnMainBranch();
   ensureCleanWorktree();
 
-  const planTemplate = loadPromptTemplate(path.join(__dirname, 'prompts', 'plan_patch.txt'));
-  const fixTemplate = loadPromptTemplate(path.join(__dirname, 'prompts', 'fix_patch.txt'));
+  const planTemplate = loadPromptTemplate('plan_patch.txt');
+  const fixTemplate = loadPromptTemplate('fix_patch.txt');
 
   let lastError = '';
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
     const snapshot = readAllowedFiles(allowedFiles);
-    const prompt = attempt === 1
-      ? renderPrompt(planTemplate, {
-        ALLOWED_FILES: allowedFiles.join(', '),
-        DEFAULT_FILE: defaultFile,
-        FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
-        USER_REQUEST: requestText
-      })
-      : renderPrompt(fixTemplate, {
-        ALLOWED_FILES: allowedFiles.join(', '),
-        DEFAULT_FILE: defaultFile,
-        FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
-        USER_REQUEST: requestText,
-        VALIDATION_ERROR: lastError
+    const topKeys = extractTopLevelKeys(snapshot);
+
+    const templateValues = {
+      ALLOWED_FILES: allowedFiles.join(', '),
+      DEFAULT_FILE: defaultFile,
+      FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
+      TOP_LEVEL_KEYS: topKeys,
+      USER_REQUEST: requestText
+    };
+
+    let prompt;
+    if (attempt === 1) {
+      prompt = renderPrompt(planTemplate, templateValues);
+    } else {
+      prompt = renderPrompt(fixTemplate, { ...templateValues, VALIDATION_ERROR: lastError });
+    }
+
+    console.log(`[site-agent] Attempt ${attempt}/${MAX_RETRIES}...`);
+
+    let raw;
+    try {
+      raw = await generateJsonPlan({
+        provider: llmConfig.provider,
+        model: llmConfig.model,
+        prompt,
+        apiKey: llmConfig.apiKey,
+        ollamaUrl: llmConfig.ollamaUrl
       });
-
-    console.log(`[site-agent] Attempt ${attempt}/${MAX_RETRIES} using model ${model}`);
-    const raw = await generateJsonPlan({ model, prompt, url: ollamaUrl });
-    const patch = parsePatch(raw);
-
-    const changedFiles = applyPatchToFiles({
-      patch,
-      defaultFile,
-      allowedFiles
-    });
-
-    ensureOnlyAllowedFilesChanged(allowedFiles);
-
-    if (changedFiles.length === 0) {
-      lastError = 'Patch applied but produced no file changes.';
-      if (attempt === MAX_RETRIES) {
-        throw new Error(lastError);
-      }
+    } catch (err) {
+      console.error(`[site-agent] LLM call failed: ${err.message}`);
+      if (attempt === MAX_RETRIES) throw err;
+      lastError = err.message;
       continue;
     }
 
-    const validation = validateAll({
-      allowedFiles,
-      buildCommand
-    });
+    let patch;
+    try {
+      patch = parsePatch(raw);
+    } catch (err) {
+      console.error(`[site-agent] Patch parse failed: ${err.message}`);
+      if (attempt === MAX_RETRIES) throw err;
+      lastError = `Patch parse error: ${err.message}\nRaw model output:\n${raw}`;
+      continue;
+    }
 
+    let changedFiles;
+    try {
+      changedFiles = applyPatchToFiles({ patch, defaultFile, allowedFiles });
+    } catch (err) {
+      console.error(`[site-agent] Patch apply failed: ${err.message}`);
+      restoreFiles(allowedFiles);
+      if (attempt === MAX_RETRIES) throw err;
+      lastError = `Patch apply error: ${err.message}`;
+      continue;
+    }
+
+    // Safety: abort if patch touched anything outside allowed files
+    try {
+      ensureOnlyAllowedFilesChanged(allowedFiles);
+    } catch (err) {
+      restoreFiles(allowedFiles);
+      throw err; // hard abort, no retry
+    }
+
+    if (changedFiles.length === 0) {
+      lastError = 'Patch applied but produced no file changes. Use correct top-level YAML paths.';
+      console.error(`[site-agent] ${lastError}`);
+      if (attempt === MAX_RETRIES) throw new Error(lastError);
+      continue;
+    }
+
+    console.log(`[site-agent] Changed: ${changedFiles.join(', ')}`);
+
+    const validation = validateAll({ allowedFiles, buildCommand });
     console.log(`[site-agent] ${validation.output}`);
+
     if (!validation.ok) {
+      restoreFiles(allowedFiles);
       lastError = validation.output;
+      console.error(`[site-agent] Validation failed, restoring files...`);
       if (attempt === MAX_RETRIES) {
         throw new Error(`Validation failed after ${MAX_RETRIES} attempts.\n${lastError}`);
       }
@@ -137,12 +200,8 @@ async function run() {
     }
 
     const commitMessage = safeCommitMessage(patch.commit_message);
-    const publish = commitAndPushMain({
-      allowedFiles,
-      commitMessage
-    });
-
-    console.log(`[site-agent] Success. Changed files: ${publish.changed.join(', ')}`);
+    const publish = commitAndPushMain({ allowedFiles, commitMessage });
+    console.log(`[site-agent] Success! Pushed: ${publish.changed.join(', ')}`);
     return;
   }
 }

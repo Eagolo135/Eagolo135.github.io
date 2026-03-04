@@ -1,33 +1,32 @@
-You are fixing a failed YAML/content patch for a Jekyll site.
+You are fixing a failed YAML patch for a Jekyll site's content file.
+Return a single raw JSON object. No markdown. No code fences. No prose.
 
-Return JSON only. No markdown. No prose.
+CRITICAL: Paths are dot-notation keys INSIDE the YAML document.
+  Good path: "phone"
+  BAD path:  "_data/site.yml.phone"  (NEVER include filenames in paths)
+
+Top-level keys in the YAML:
+{{TOP_LEVEL_KEYS}}
 
 Rules:
-- Output exactly one JSON object with keys: changes, commit_message.
-- Allowed ops: set, append, remove.
-- Use minimal corrective changes only.
-- Keep all edits inside allowed files.
-- Do not delete files.
+- Output exactly one JSON object with keys: changes, commit_message
+- Allowed ops: set, append, remove
+- Use minimal corrective changes only
+- NEVER include filenames or file paths inside the "path" field
+- Keep all edits inside allowed files
+- Do not delete files
 
-Allowed files:
-{{ALLOWED_FILES}}
+Allowed files: {{ALLOWED_FILES}}
+Default file: {{DEFAULT_FILE}}
 
-Primary default file:
-{{DEFAULT_FILE}}
-
-Current file contents (JSON map path->content):
+Current file contents:
 {{FILE_SNAPSHOT_JSON}}
 
 Original request:
 {{USER_REQUEST}}
 
-Validation error to fix:
+Error to fix:
 {{VALIDATION_ERROR}}
 
-Required output format:
-{
-  "changes": [
-    {"op":"set","path":"hero.headline","value":"..."}
-  ],
-  "commit_message":"Fix validation and update site content"
-}
+Example output:
+{"changes":[{"op":"set","path":"phone","value":"555-1234"}],"commit_message":"Fix phone number"}

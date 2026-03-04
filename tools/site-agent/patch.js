@@ -12,30 +12,23 @@ function parsePatch(jsonText) {
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Patch must be a JSON object.');
   }
-  const topKeys = Object.keys(parsed);
-  if (topKeys.length !== 2 || !topKeys.includes('changes') || !topKeys.includes('commit_message')) {
-    throw new Error('Patch must contain exactly: changes, commit_message.');
-  }
+
+  // Tolerate extra keys from LLM but require the two we need
   if (!Array.isArray(parsed.changes)) {
-    throw new Error('Patch must include a changes array.');
+    throw new Error('Patch must include a "changes" array.');
   }
   if (typeof parsed.commit_message !== 'string' || parsed.commit_message.trim() === '') {
-    throw new Error('Patch must include a non-empty commit_message string.');
+    parsed.commit_message = 'Update site content via site-agent';
   }
 
+  // Validate and sanitize each change entry
+  const cleanedChanges = [];
   parsed.changes.forEach((change, index) => {
     if (!change || typeof change !== 'object' || Array.isArray(change)) {
       throw new Error(`changes[${index}] must be an object.`);
     }
 
-    const keys = Object.keys(change);
-    const allowedKeys = ['op', 'path', 'value', 'file'];
-    const invalid = keys.filter((key) => !allowedKeys.includes(key));
-    if (invalid.length > 0) {
-      throw new Error(`changes[${index}] has invalid key(s): ${invalid.join(', ')}`);
-    }
-
-    if (!keys.includes('op') || !keys.includes('path')) {
+    if (!change.op || !change.path) {
       throw new Error(`changes[${index}] must include op and path.`);
     }
     if (!['set', 'append', 'remove'].includes(change.op)) {
@@ -44,8 +37,15 @@ function parsePatch(jsonText) {
     if ((change.op === 'set' || change.op === 'append') && !Object.prototype.hasOwnProperty.call(change, 'value')) {
       throw new Error(`changes[${index}] op ${change.op} requires value.`);
     }
+
+    // Keep only known keys
+    const clean = { op: change.op, path: change.path };
+    if (Object.prototype.hasOwnProperty.call(change, 'value')) clean.value = change.value;
+    if (typeof change.file === 'string' && change.file.trim() !== '') clean.file = change.file;
+    cleanedChanges.push(clean);
   });
 
+  parsed.changes = cleanedChanges;
   return parsed;
 }
 
