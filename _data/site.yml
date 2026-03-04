@@ -206,11 +206,11 @@ booking_link: https://cal.com/nicholas-nelson-vwn6zc/30min
 booking_text: Schedule a free 30-minute consultation to discuss how AI can
   transform your business.
 theme:
-  primary_color: "#3498db"
-  secondary_color: "#9FBFAF"
-  accent_color: "#6C9E79"
-  neutral_color: "#E8F0EA"
+  primary_color: "#2F8F6A"
+  secondary_color: "#A3D9B1"
+  accent_color: "#6B9F75"
+  neutral_color: "#E6F2EA"
   vibe: nature, earth, vintage
   texture: paper-grain
-  description: Green-centric palette with warm earth tones and a subtle paper
-    texture for a vintage, nature-inspired look.
+  description: Dark pastel green palette with muted earth tones and a subtle paper
+    texture for a calm, nature-inspired look.
