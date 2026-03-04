@@ -35,8 +35,7 @@ async function callOpenAI({ model, prompt, apiKey }) {
       },
       { role: 'user', content: prompt }
     ],
-    response_format: { type: 'json_object' },
-    temperature: 0.1
+    response_format: { type: 'json_object' }
   };
 
   const response = await fetch(OPENAI_URL, {
