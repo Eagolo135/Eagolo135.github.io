@@ -240,7 +240,7 @@ theme:
     radius_large: 1rem
     radius_pill: 9999px
   buttons:
-    border_radius: 9999px
+    border_radius: 8px
     padding: 0.75rem 2rem
     font_weight: "600"
   navbar:
