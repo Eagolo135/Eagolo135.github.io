@@ -7,6 +7,8 @@ const { parsePatch, applyPatchToFiles } = require('./patch');
 const { validateAll, runCommand } = require('./validate');
 const { loadEnv } = require('./env');
 const { analyzeRequest, buildEnhancedRequest } = require('./conversation');
+const { buildDesignResearchContext } = require('./research');
+const { runVisualSimilarityAudit } = require('./visual');
 const {
   ensureOnMainBranch,
   ensureCleanWorktreeOrAutoSave,
@@ -50,6 +52,26 @@ function safeCommitMessage(message) {
   const fallback = 'Update site content via site-agent';
   const finalMessage = (message || '').trim() || fallback;
   return finalMessage.slice(0, 120);
+}
+
+function formatVisualFeedback(audit) {
+  if (!audit || !audit.enabled) {
+    return '';
+  }
+
+  const lines = [];
+  lines.push(`Visual audit average similarity: ${audit.averageSimilarity}/100`);
+  for (const result of audit.comparisons || []) {
+    lines.push(`- ${result.page}: ${result.similarity_score}/100`);
+    if (Array.isArray(result.gaps) && result.gaps.length > 0) {
+      lines.push(`  Gaps: ${result.gaps.slice(0, 3).join('; ')}`);
+    }
+    if (Array.isArray(result.recommendations) && result.recommendations.length > 0) {
+      lines.push(`  Recommendations: ${result.recommendations.slice(0, 4).join('; ')}`);
+    }
+  }
+
+  return lines.join('\n');
 }
 
 function buildAllowedFiles(cwd) {
@@ -149,6 +171,7 @@ async function runRequest(requestText, options = {}) {
   const cwd = process.cwd();
   const llmConfig = resolveConfig();
   const buildCommand = process.env.SITE_AGENT_BUILD_CMD || 'bundle exec jekyll build';
+  const visualSimilarityThreshold = Number(process.env.SITE_AGENT_VISUAL_SIMILARITY_THRESHOLD || '72');
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
 
@@ -200,6 +223,17 @@ async function runRequest(requestText, options = {}) {
       // If analysis fails, proceed with original request
       console.log('[site-agent] Proceeding with request...');
     }
+  }
+
+  let researchContext = null;
+  try {
+    researchContext = await buildDesignResearchContext(finalRequest);
+    if (researchContext.enabled && researchContext.contextText) {
+      console.log('[site-agent] Agentic research gathered design references.');
+      finalRequest = `${finalRequest}\n\n${researchContext.contextText}`;
+    }
+  } catch (error) {
+    console.log(`[site-agent] Research skipped: ${error.message}`);
   }
 
   const planTemplate = loadPromptTemplate('plan_patch.txt');
@@ -292,6 +326,34 @@ async function runRequest(requestText, options = {}) {
         throw new Error(`Validation failed after ${MAX_RETRIES} attempts.\n${lastError}`);
       }
       continue;
+    }
+
+    if (researchContext && researchContext.enabled && researchContext.referenceUrl) {
+      try {
+        console.log('[site-agent] Running visual similarity audit (screenshots + vision)...');
+        const audit = await runVisualSimilarityAudit({
+          siteRoot: cwd,
+          referenceUrl: researchContext.referenceUrl,
+          apiKey: llmConfig.apiKey,
+          model: llmConfig.model,
+          designGoal: requestText,
+          pages: ['index.html']
+        });
+
+        if (audit.enabled) {
+          console.log(`[site-agent] Visual similarity: ${audit.averageSimilarity}/100`);
+          if (audit.averageSimilarity < visualSimilarityThreshold && attempt < MAX_RETRIES) {
+            restoreFiles(allowedFiles);
+            lastError = `Design similarity too low to reference target (${audit.averageSimilarity}/100, threshold ${visualSimilarityThreshold}/100).\n${formatVisualFeedback(audit)}`;
+            console.error('[site-agent] Similarity below threshold, retrying with visual feedback...');
+            continue;
+          }
+        } else {
+          console.log(`[site-agent] Visual audit skipped: ${audit.reason}`);
+        }
+      } catch (error) {
+        console.log(`[site-agent] Visual audit unavailable: ${error.message}`);
+      }
     }
 
     const commitMessage = safeCommitMessage(patch.commit_message);
