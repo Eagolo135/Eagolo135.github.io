@@ -208,14 +208,78 @@ function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
     return currentText;
   };
 
+  /**
+   * Try to find the pattern in text with some flexibility:
+   * 1. Exact match
+   * 2. Normalized whitespace match
+   * 3. Regex match (if pattern looks like regex)
+   */
+  const findPattern = (text, pattern) => {
+    // 1. Exact match
+    if (text.includes(pattern)) {
+      return { found: true, match: pattern };
+    }
+
+    // 2. Normalize whitespace and try again
+    const normalizedPattern = pattern.replace(/\s+/g, ' ').trim();
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const normalizedLine = lines[i].replace(/\s+/g, ' ').trim();
+      if (normalizedLine.includes(normalizedPattern)) {
+        // Found a match - extract the actual text including original whitespace
+        const lineStart = text.indexOf(lines[i]);
+        return { found: true, match: lines[i], lineNumber: i + 1 };
+      }
+    }
+
+    // 3. Try as regex if it contains regex-like characters
+    if (/[.*+?^${}()|[\]\\]/.test(pattern)) {
+      try {
+        const re = new RegExp(pattern.replace(/\s+/g, '\\s*'));
+        const match = text.match(re);
+        if (match) {
+          return { found: true, match: match[0], isRegex: true };
+        }
+      } catch {
+        // Invalid regex, continue to failure
+      }
+    }
+
+    return { found: false };
+  };
+
+  /**
+   * Find similar lines in the file for error reporting
+   */
+  const findSimilarLines = (text, pattern, maxResults = 3) => {
+    const keywords = pattern.toLowerCase().replace(/[^\w\s-]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+    if (keywords.length === 0) return [];
+
+    const lines = text.split('\n');
+    const scored = lines.map((line, idx) => {
+      const lowerLine = line.toLowerCase();
+      const score = keywords.filter(kw => lowerLine.includes(kw)).length;
+      return { line: line.trim(), lineNumber: idx + 1, score };
+    }).filter(item => item.score > 0 && item.line.length > 0);
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, maxResults);
+  };
+
   const applyTextChange = (filePath, change) => {
     let text = loadText(filePath);
 
     if (change.op === 'replace_text') {
-      if (!text.includes(change.find)) {
-        throw new Error(`replace_text find pattern not found in ${filePath}`);
+      const result = findPattern(text, change.find);
+      if (!result.found) {
+        const similar = findSimilarLines(text, change.find);
+        let msg = `replace_text find pattern not found in ${filePath}`;
+        if (similar.length > 0) {
+          msg += `\nSimilar lines found:\n${similar.map(s => `  Line ${s.lineNumber}: ${s.line.substring(0, 80)}`).join('\n')}`;
+        }
+        throw new Error(msg);
       }
-      text = text.replace(change.find, change.replace);
+      text = text.replace(result.match, change.replace);
     } else if (change.op === 'append_text') {
       text = `${text}${change.value}`;
     } else if (change.op === 'set_file_content') {

@@ -41,11 +41,26 @@ Top-level YAML keys: {{TOP_LEVEL_KEYS}}
 - YAML ops: set, append, remove (use "path" field, targets default YAML file)
 - Text ops: replace_text (use "file", "find", "replace" fields)
 
+## Critical: replace_text Rules
+For replace_text operations, the "find" value MUST be EXACT text from the file:
+- Look at the actual file contents provided below
+- Copy the EXACT characters including spaces, colons, semicolons
+- For CSS properties: include the full line like "    --primary-color: #3498db;"
+- For CSS selectors with styles: include selector + opening brace + property lines
+- NEVER guess at values - use what's actually in the file
+
+Good find pattern (FROM the actual file):
+  "    --primary-color: #3498db;"
+
+Bad find pattern (guessed):
+  "--primary-color: blue;"
+
 ## Rules
 - Output JSON with keys: changes, commit_message
 - Automatically choose the right file based on request type
 - Keep edits minimal
 - For colors, use replace_text on CSS variables in assets/css/style.css
+- ALWAYS copy find patterns exactly from the provided file contents
 
 Allowed files: {{ALLOWED_FILES}}
 Default YAML file: {{DEFAULT_FILE}}
