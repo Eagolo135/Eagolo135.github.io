@@ -134,6 +134,35 @@ It will not modify workflow files, scripts, or arbitrary repository paths.
 
 Use the local `site-agent` CLI to update site content from natural language without GitHub UI steps.
 
+### Setup
+
+1. Install dependencies from the project root:
+
+```bash
+npm install
+```
+
+2. Create a `.env` file in the project root with:
+
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5-mini
+OLLAMA_URL=http://localhost:11434
+SITE_AGENT_CONTENT_FILE=_data/site.yml
+```
+
+3. Run chat mode:
+
+```bash
+npm run chat
+```
+
+If `.env` is missing, the tool will show:
+
+`Missing .env configuration. Create a .env file with OPENAI_API_KEY and required settings.`
+
+System environment variables override `.env` values when both are present.
+
 ### What it does
 
 - Reads your request from command line text
@@ -181,8 +210,10 @@ site-agent.cmd "Add one new service about AI automation audits with a short desc
 
 - `OPENAI_API_KEY` (required for OpenAI provider)
 - `SITE_AGENT_PROVIDER` (default: `openai`, alternative: `ollama`)
-- `SITE_AGENT_MODEL` (default: `gpt-4o-mini` for OpenAI, `llama3.2:1b` for Ollama)
-- `SITE_AGENT_OLLAMA_URL` (default: `http://localhost:11434/api/generate`)
+- `OPENAI_MODEL` (default: `gpt-5-mini`)
+- `SITE_AGENT_MODEL` (optional override model name)
+- `OLLAMA_URL` (default: `http://localhost:11434`, `/api/generate` is appended automatically)
+- `SITE_AGENT_OLLAMA_URL` (optional direct override for full Ollama generate endpoint)
 - `SITE_AGENT_CONTENT_FILE` (default: `_data/site.yml`)
 - `SITE_AGENT_THEME_FILE` (optional second editable file)
 - `SITE_AGENT_BUILD_CMD` (default: `bundle exec jekyll build`)

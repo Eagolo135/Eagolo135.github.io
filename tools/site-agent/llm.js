@@ -7,6 +7,17 @@
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 
+function normalizeOllamaGenerateUrl(value) {
+  const input = (value || '').trim();
+  if (!input) {
+    return OLLAMA_URL;
+  }
+  if (input.endsWith('/api/generate')) {
+    return input;
+  }
+  return `${input.replace(/\/+$/, '')}/api/generate`;
+}
+
 async function callOpenAI({ model, prompt, apiKey }) {
   if (!apiKey) {
     throw new Error(
@@ -87,12 +98,12 @@ function resolveConfig() {
   const provider = (process.env.SITE_AGENT_PROVIDER || 'openai').toLowerCase();
   let model;
   if (provider === 'ollama') {
-    model = process.env.SITE_AGENT_MODEL || 'llama3.2:1b';
+    model = process.env.SITE_AGENT_MODEL || process.env.OPENAI_MODEL || 'llama3.2:1b';
   } else {
-    model = process.env.SITE_AGENT_MODEL || 'gpt-4o-mini';
+    model = process.env.OPENAI_MODEL || process.env.SITE_AGENT_MODEL || 'gpt-5-mini';
   }
   const apiKey = process.env.OPENAI_API_KEY || '';
-  const ollamaUrl = process.env.SITE_AGENT_OLLAMA_URL || OLLAMA_URL;
+  const ollamaUrl = normalizeOllamaGenerateUrl(process.env.SITE_AGENT_OLLAMA_URL || process.env.OLLAMA_URL || OLLAMA_URL);
   return { provider, model, apiKey, ollamaUrl };
 }
 

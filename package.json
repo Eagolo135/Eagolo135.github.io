@@ -1,0 +1,13 @@
+{
+  "name": "eagolo135-site-tools",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "chat": "node tools/site-agent/chat.js",
+    "site-agent": "node tools/site-agent/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "yaml": "^2.5.1"
+  }
+}

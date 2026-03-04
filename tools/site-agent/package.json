@@ -5,7 +5,11 @@
   "description": "Local Ollama-powered updater for Jekyll site content",
   "main": "index.js",
   "type": "commonjs",
+  "scripts": {
+    "chat": "node chat.js"
+  },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "yaml": "^2.5.1"
   }
 }

@@ -4,6 +4,7 @@ const path = require('node:path');
 const { generateJsonPlan, resolveConfig } = require('./llm');
 const { parsePatch, applyPatchToFiles } = require('./patch');
 const { validateAll, runCommand } = require('./validate');
+const { loadEnv } = require('./env');
 const {
   ensureOnMainBranch,
   ensureCleanWorktree,
@@ -90,9 +91,15 @@ function extractTopLevelKeys(snapshot) {
 
 async function run() {
   const requestText = process.argv.slice(2).join(' ').trim();
+  await runRequest(requestText);
+}
+
+async function runRequest(requestText) {
   if (!requestText) {
     throw new Error('Usage: .\\site-agent.ps1 "Describe the update request"');
   }
+
+  loadEnv();
 
   const cwd = process.cwd();
   const llmConfig = resolveConfig();
@@ -206,7 +213,13 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error(`[site-agent] ERROR: ${error.message}`);
-  process.exit(1);
-});
+module.exports = {
+  runRequest
+};
+
+if (require.main === module) {
+  run().catch((error) => {
+    console.error(`[site-agent] ERROR: ${error.message}`);
+    process.exit(1);
+  });
+}
