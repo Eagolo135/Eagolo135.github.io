@@ -149,6 +149,7 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5-mini
 OLLAMA_URL=http://localhost:11434
 SITE_AGENT_CONTENT_FILE=_data/site.yml
+SITE_AGENT_ALLOWED_FILES=_data/site.yml,assets/css/style.css,_layouts/default.html,index.html,services.html,projects.html,contact.html,book.html
 ```
 
 3. Run chat mode:
@@ -168,7 +169,8 @@ System environment variables override `.env` values when both are present.
 - Reads your request from command line text
 - Calls OpenAI API by default (or Ollama if `SITE_AGENT_PROVIDER=ollama`)
 - Forces strict JSON patch output (`changes` + `commit_message`)
-- Applies patch operations (`set`, `append`, optional `remove`) to allowed YAML files only
+- Applies YAML patch operations (`set`, `append`, optional `remove`) for data updates
+- Applies safe text operations (`replace_text`, `append_text`) for CSS/HTML updates
 - Always validates YAML parsing
 - Runs `bundle exec jekyll build` when `bundle` exists
 - If `bundle` is unavailable, warns and continues with YAML-only validation
@@ -178,7 +180,7 @@ System environment variables override `.env` values when both are present.
 
 ### Hard safety boundaries
 
-- Only edits configured content files (`_data/site.yml` by default if present, else `site.yml`)
+- Only edits files in the allowlist (`SITE_AGENT_ALLOWED_FILES` or default site files)
 - Aborts if files outside allowed content file(s) are modified
 - Does not delete files or modify GitHub Actions workflows
 
@@ -215,6 +217,7 @@ site-agent.cmd "Add one new service about AI automation audits with a short desc
 - `OLLAMA_URL` (default: `http://localhost:11434`, `/api/generate` is appended automatically)
 - `SITE_AGENT_OLLAMA_URL` (optional direct override for full Ollama generate endpoint)
 - `SITE_AGENT_CONTENT_FILE` (default: `_data/site.yml`)
+- `SITE_AGENT_ALLOWED_FILES` (comma-separated allowlist of editable files)
 - `SITE_AGENT_THEME_FILE` (optional second editable file)
 - `SITE_AGENT_BUILD_CMD` (default: `bundle exec jekyll build`)
 

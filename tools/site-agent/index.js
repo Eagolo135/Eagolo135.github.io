@@ -13,6 +13,16 @@ const {
 } = require('./git');
 
 const MAX_RETRIES = 3;
+const DEFAULT_ALLOWED_FILES = [
+  '_data/site.yml',
+  'assets/css/style.css',
+  '_layouts/default.html',
+  'index.html',
+  'services.html',
+  'projects.html',
+  'contact.html',
+  'book.html'
+];
 
 function resolveDefaultContentFile(cwd) {
   const candidate = path.join(cwd, '_data', 'site.yml');
@@ -41,9 +51,21 @@ function safeCommitMessage(message) {
 }
 
 function buildAllowedFiles(cwd) {
+  const fromEnv = process.env.SITE_AGENT_ALLOWED_FILES;
+  if (fromEnv && fromEnv.trim()) {
+    return Array.from(
+      new Set(
+        fromEnv
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    );
+  }
+
   const requestedContent = process.env.SITE_AGENT_CONTENT_FILE || resolveDefaultContentFile(cwd);
   const themePath = process.env.SITE_AGENT_THEME_FILE;
-  const files = [requestedContent];
+  const files = [requestedContent, ...DEFAULT_ALLOWED_FILES.filter((file) => file !== requestedContent)];
   if (themePath && themePath.trim() !== '') {
     files.push(themePath.trim());
   }

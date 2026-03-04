@@ -2,6 +2,10 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const YAML = require('yaml');
 
+function isYamlFile(filePath) {
+  return /\.ya?ml$/i.test(filePath);
+}
+
 function runCommand(command, options = {}) {
   const result = spawnSync(command, {
     shell: true,
@@ -18,7 +22,8 @@ function runCommand(command, options = {}) {
 }
 
 function validateYamlFiles(filePaths) {
-  for (const filePath of filePaths) {
+  const yamlFiles = filePaths.filter(isYamlFile);
+  for (const filePath of yamlFiles) {
     const text = fs.readFileSync(filePath, 'utf8');
     try {
       YAML.parse(text);

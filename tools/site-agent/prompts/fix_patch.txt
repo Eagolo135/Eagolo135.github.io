@@ -1,4 +1,4 @@
-You are fixing a failed YAML patch for a Jekyll site's content file.
+You are fixing a failed patch for a Jekyll site.
 Return a single raw JSON object. No markdown. No code fences. No prose.
 
 CRITICAL: Paths are dot-notation keys INSIDE the YAML document.
@@ -10,7 +10,8 @@ Top-level keys in the YAML:
 
 Rules:
 - Output exactly one JSON object with keys: changes, commit_message
-- Allowed ops: set, append, remove
+- YAML ops: set, append, remove (requires path)
+- Text ops for CSS/HTML: replace_text (requires find + replace), append_text (requires value), set_file_content (requires value)
 - Use minimal corrective changes only
 - NEVER include filenames or file paths inside the "path" field
 - Keep all edits inside allowed files

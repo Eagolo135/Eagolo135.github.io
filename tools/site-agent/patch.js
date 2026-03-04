@@ -1,6 +1,10 @@
 const fs = require('node:fs');
 const YAML = require('yaml');
 
+function isYamlFile(filePath) {
+  return /\.ya?ml$/i.test(filePath);
+}
+
 function parsePatch(jsonText) {
   let parsed;
   try {
@@ -28,20 +32,32 @@ function parsePatch(jsonText) {
       throw new Error(`changes[${index}] must be an object.`);
     }
 
-    if (!change.op || !change.path) {
-      throw new Error(`changes[${index}] must include op and path.`);
+    if (!change.op) {
+      throw new Error(`changes[${index}] must include op.`);
     }
-    if (!['set', 'append', 'remove'].includes(change.op)) {
+    if (!['set', 'append', 'remove', 'replace_text', 'append_text', 'set_file_content'].includes(change.op)) {
       throw new Error(`changes[${index}] has unsupported op: ${change.op}`);
     }
     if ((change.op === 'set' || change.op === 'append') && !Object.prototype.hasOwnProperty.call(change, 'value')) {
       throw new Error(`changes[${index}] op ${change.op} requires value.`);
     }
+    if ((change.op === 'set' || change.op === 'append' || change.op === 'remove') && !change.path) {
+      throw new Error(`changes[${index}] op ${change.op} requires path.`);
+    }
+    if (change.op === 'replace_text' && (typeof change.find !== 'string' || typeof change.replace !== 'string')) {
+      throw new Error(`changes[${index}] replace_text requires string find and replace.`);
+    }
+    if ((change.op === 'append_text' || change.op === 'set_file_content') && typeof change.value !== 'string') {
+      throw new Error(`changes[${index}] ${change.op} requires string value.`);
+    }
 
     // Keep only known keys
-    const clean = { op: change.op, path: change.path };
+    const clean = { op: change.op };
+    if (typeof change.path === 'string') clean.path = change.path;
     if (Object.prototype.hasOwnProperty.call(change, 'value')) clean.value = change.value;
     if (typeof change.file === 'string' && change.file.trim() !== '') clean.file = change.file;
+    if (typeof change.find === 'string') clean.find = change.find;
+    if (typeof change.replace === 'string') clean.replace = change.replace;
     cleanedChanges.push(clean);
   });
 
@@ -168,8 +184,10 @@ function applyChange(doc, change) {
 }
 
 function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
-  const changedFiles = new Set();
+  const changedYamlFiles = new Set();
+  const changedTextFiles = new Set();
   const docsByFile = new Map();
+  const textByFile = new Map();
 
   const loadDoc = (filePath) => {
     if (docsByFile.has(filePath)) {
@@ -181,6 +199,34 @@ function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
     return parsed;
   };
 
+  const loadText = (filePath) => {
+    if (textByFile.has(filePath)) {
+      return textByFile.get(filePath);
+    }
+    const currentText = fs.readFileSync(filePath, 'utf8');
+    textByFile.set(filePath, currentText);
+    return currentText;
+  };
+
+  const applyTextChange = (filePath, change) => {
+    let text = loadText(filePath);
+
+    if (change.op === 'replace_text') {
+      if (!text.includes(change.find)) {
+        throw new Error(`replace_text find pattern not found in ${filePath}`);
+      }
+      text = text.replace(change.find, change.replace);
+    } else if (change.op === 'append_text') {
+      text = `${text}${change.value}`;
+    } else if (change.op === 'set_file_content') {
+      text = change.value;
+    } else {
+      throw new Error(`Unsupported text op: ${change.op}`);
+    }
+
+    textByFile.set(filePath, text);
+  };
+
   for (const change of patch.changes) {
     const targetFile = typeof change.file === 'string' && change.file.trim() !== '' ? change.file : defaultFile;
     if (!allowedFiles.includes(targetFile)) {
@@ -190,15 +236,35 @@ function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
       throw new Error(`Target file does not exist: ${targetFile}`);
     }
 
-    const doc = loadDoc(targetFile);
-    applyChange(doc, change);
-    changedFiles.add(targetFile);
+    if (isYamlFile(targetFile)) {
+      const doc = loadDoc(targetFile);
+      if (!['set', 'append', 'remove'].includes(change.op)) {
+        throw new Error(`Operation ${change.op} is not allowed for YAML path edits in ${targetFile}`);
+      }
+      applyChange(doc, change);
+      changedYamlFiles.add(targetFile);
+    } else {
+      if (!['replace_text', 'append_text', 'set_file_content'].includes(change.op)) {
+        throw new Error(`Operation ${change.op} is not allowed for non-YAML file ${targetFile}`);
+      }
+      applyTextChange(targetFile, change);
+      changedTextFiles.add(targetFile);
+    }
   }
 
   const actuallyWritten = [];
-  for (const filePath of changedFiles) {
+  for (const filePath of changedYamlFiles) {
     const oldText = fs.readFileSync(filePath, 'utf8');
     const newText = YAML.stringify(docsByFile.get(filePath));
+    if (oldText !== newText) {
+      fs.writeFileSync(filePath, newText, 'utf8');
+      actuallyWritten.push(filePath);
+    }
+  }
+
+  for (const filePath of changedTextFiles) {
+    const oldText = fs.readFileSync(filePath, 'utf8');
+    const newText = textByFile.get(filePath);
     if (oldText !== newText) {
       fs.writeFileSync(filePath, newText, 'utf8');
       actuallyWritten.push(filePath);
