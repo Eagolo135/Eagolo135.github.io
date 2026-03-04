@@ -13,6 +13,18 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/apple-touch-icon.png' | relative_url }}">
     
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+    
+    <!-- Theme colors from _data/site.yml -->
+    {% if site.data.site.theme %}
+    <style>
+      :root {
+        {% if site.data.site.theme.primary_color %}--primary-color: {{ site.data.site.theme.primary_color }};{% endif %}
+        {% if site.data.site.theme.secondary_color %}--secondary-color: {{ site.data.site.theme.secondary_color }};{% endif %}
+        {% if site.data.site.theme.accent_color %}--accent-color: {{ site.data.site.theme.accent_color }};{% endif %}
+        {% if site.data.site.theme.neutral_color %}--bg-light: {{ site.data.site.theme.neutral_color }};{% endif %}
+      }
+    </style>
+    {% endif %}
 </head>
 <body>
     <!-- Navigation -->

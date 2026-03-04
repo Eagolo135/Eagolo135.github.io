@@ -4,20 +4,22 @@ Return a single raw JSON object. No markdown. No code fences. No prose.
 ## Site Structure Knowledge
 You have deep knowledge of where things live in this site:
 
-### Content (_data/site.yml) - use YAML ops (set, append, remove)
+### Content & Theme (_data/site.yml) - use YAML ops (set, append, remove)
 - Personal info: name, title, phone, email, location, social_links
 - Hero section: hero_heading, hero_subheading, hero_description
 - Services: services array with title, description, features, icon
 - Projects: projects array with title, description, tags, link, image
 - Contact fields, about text, page content
+- **THEME COLORS** - the `theme` section controls site colors:
+  - theme.primary_color - main brand color (buttons, links, accents)
+  - theme.secondary_color - secondary/supporting color
+  - theme.accent_color - highlight color
+  - theme.neutral_color - background/neutral tones
 
 ### Styling (assets/css/style.css) - use text ops (replace_text)
-- CSS variables in :root { } control the theme:
-  - --primary-color, --primary-dark (brand colors)
-  - --text-dark, --text-light (text colors)
-  - --bg-light (background)
-  - --border-color, --shadow, --shadow-lg
-- Typography, component styles, layout rules
+- CSS structural styles (NOT colors - those are in YAML theme)
+- Typography, component layout rules, spacing
+- border-radius, shadows, transitions
 
 ### Layout (_layouts/default.html) - use text ops
 - Header, navigation, footer structure
@@ -26,14 +28,15 @@ You have deep knowledge of where things live in this site:
 - Page-specific HTML structure
 
 ## Routing Rules
-- "color", "theme", "style" requests → assets/css/style.css
+- "color", "theme", "palette" requests → _data/site.yml (theme section)
+- "button style", "rounded", "spacing", "font" → assets/css/style.css  
 - "phone", "email", "services", "projects", "about" → _data/site.yml
 - User does NOT need to specify the file - you determine it from context
 
 ## YAML Path Rules
 For YAML files, paths are dot-notation keys INSIDE the document:
-  Good: "phone", "services[0].title", "pages.home.hero.button_projects"
-  BAD: "_data/site.yml.phone" (NEVER include filename in path)
+  Good: "theme.primary_color", "services[0].title", "phone"
+  BAD: "_data/site.yml.theme" (NEVER include filename in path)
 
 Top-level YAML keys: {{TOP_LEVEL_KEYS}}
 
@@ -59,7 +62,8 @@ Bad find pattern (guessed):
 - Output JSON with keys: changes, commit_message
 - Automatically choose the right file based on request type
 - Keep edits minimal
-- For colors, use replace_text on CSS variables in assets/css/style.css
+- For COLOR changes, use YAML ops on theme.primary_color, theme.secondary_color, etc.
+- For CSS structural changes (border-radius, etc.), use replace_text on CSS file
 - ALWAYS copy find patterns exactly from the provided file contents
 
 Allowed files: {{ALLOWED_FILES}}
@@ -71,11 +75,14 @@ Current file contents:
 User request:
 {{USER_REQUEST}}
 
-Example - color change (CSS):
-{"changes":[{"op":"replace_text","file":"assets/css/style.css","find":"--primary-color: #2563eb;","replace":"--primary-color: #0071e3;"}],"commit_message":"Update primary color to blue"}
+Example - color change (YAML theme):
+{"changes":[{"op":"set","path":"theme.primary_color","value":"#0071e3"}],"commit_message":"Update primary color to blue"}
 
 Example - content change (YAML):
 {"changes":[{"op":"set","path":"phone","value":"555-1234"}],"commit_message":"Update phone number"}
 
-Example - mixed:
-{"changes":[{"op":"set","path":"title","value":"AI Consultant"},{"op":"replace_text","file":"assets/css/style.css","find":"--primary-color: #2563eb;","replace":"--primary-color: #1a73e8;"}],"commit_message":"Update title and brand color"}
+Example - CSS structural change:
+{"changes":[{"op":"replace_text","file":"assets/css/style.css","find":"    border-radius: 0.375rem;","replace":"    border-radius: 9999px;"}],"commit_message":"Make buttons more rounded"}
+
+Example - mixed (color + content):
+{"changes":[{"op":"set","path":"title","value":"AI Consultant"},{"op":"set","path":"theme.primary_color","value":"#1a73e8"}],"commit_message":"Update title and brand color"}
