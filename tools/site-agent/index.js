@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
 const path = require('node:path');
+const readline = require('node:readline');
 const { generateJsonPlan, resolveConfig } = require('./llm');
 const { parsePatch, applyPatchToFiles } = require('./patch');
 const { validateAll, runCommand } = require('./validate');
 const { loadEnv } = require('./env');
+const { analyzeRequest, buildEnhancedRequest } = require('./conversation');
 const {
   ensureOnMainBranch,
   ensureCleanWorktree,
@@ -113,12 +115,33 @@ function extractTopLevelKeys(snapshot) {
 
 async function run() {
   const requestText = process.argv.slice(2).join(' ').trim();
-  await runRequest(requestText);
+  
+  // Check if stdin is interactive (TTY) for clarification support
+  const isInteractive = process.stdin.isTTY;
+  
+  await runRequest(requestText, { interactive: isInteractive });
 }
 
-async function runRequest(requestText) {
+/** Helper to prompt user for input */
+async function promptUser(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function runRequest(requestText, options = {}) {
+  const { interactive = false } = options;
+  
   if (!requestText) {
-    throw new Error('Usage: .\\site-agent.ps1 "Describe the update request"');
+    throw new Error('Usage: .\\site-agent.ps1 "Describe the update request"\n       Or run: npm run chat (for interactive mode)');
   }
 
   loadEnv();
@@ -130,11 +153,50 @@ async function runRequest(requestText) {
   const defaultFile = allowedFiles[0];
 
   console.log(`[site-agent] Provider: ${llmConfig.provider}, Model: ${llmConfig.model}`);
-  console.log(`[site-agent] Content file: ${defaultFile}`);
 
   assertAllowedFilesExist(allowedFiles);
   ensureOnMainBranch();
   ensureCleanWorktree();
+
+  // Analyze request and optionally ask for clarification
+  let finalRequest = requestText;
+  if (interactive) {
+    console.log('[site-agent] Analyzing your request...');
+    const snapshot = readAllowedFiles(allowedFiles);
+    
+    try {
+      const analysis = await analyzeRequest({
+        request: requestText,
+        fileSnapshot: snapshot,
+        llmConfig
+      });
+      
+      if (analysis.targetFiles && analysis.targetFiles.length > 0) {
+        console.log(`[site-agent] Will update: ${analysis.targetFiles.join(', ')}`);
+      }
+      
+      if (analysis.needsClarification && analysis.questions.length > 0) {
+        console.log('');
+        console.log('I need a bit more info to proceed:');
+        
+        const clarifications = [];
+        for (const question of analysis.questions) {
+          const answer = await promptUser(`  ${question}\n  → `);
+          if (answer) {
+            clarifications.push({ question, answer });
+          }
+        }
+        
+        if (clarifications.length > 0) {
+          finalRequest = buildEnhancedRequest(requestText, clarifications);
+          console.log('');
+        }
+      }
+    } catch (err) {
+      // If analysis fails, proceed with original request
+      console.log('[site-agent] Proceeding with request...');
+    }
+  }
 
   const planTemplate = loadPromptTemplate('plan_patch.txt');
   const fixTemplate = loadPromptTemplate('fix_patch.txt');
@@ -149,7 +211,7 @@ async function runRequest(requestText) {
       DEFAULT_FILE: defaultFile,
       FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
       TOP_LEVEL_KEYS: topKeys,
-      USER_REQUEST: requestText
+      USER_REQUEST: finalRequest
     };
 
     let prompt;
