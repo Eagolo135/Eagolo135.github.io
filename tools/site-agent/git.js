@@ -48,6 +48,52 @@ function ensureCleanWorktree() {
   }
 }
 
+function ensureCleanWorktreeOrAutoSave({ reason = 'site-agent run' } = {}) {
+  const lines = getPorcelainStatus();
+  if (lines.length === 0) {
+    return {
+      saved: false,
+      commitHash: null,
+      statusLines: []
+    };
+  }
+
+  const timestamp = new Date().toISOString();
+  const label = `site-agent auto-save before run (${reason}) ${timestamp}`;
+
+  const add = runCommand('git add -A');
+  if (!add.ok) {
+    throw new Error(`Failed to stage changes for auto-save:\n${add.output}`);
+  }
+
+  const commit = runCommand(`git commit -m "${label.replace(/"/g, '\\"')}"`);
+  if (!commit.ok) {
+    throw new Error(`Failed to commit changes for auto-save:\n${commit.output}`);
+  }
+
+  const push = runCommand('git push origin main');
+  if (!push.ok) {
+    throw new Error(`Failed to push auto-save commit:\n${push.output}`);
+  }
+
+  const verify = getPorcelainStatus();
+  if (verify.length > 0) {
+    throw new Error(
+      'Auto-save attempted, but working tree is still not clean.\n' +
+      verify.join('\n')
+    );
+  }
+
+  const head = runCommand('git rev-parse --short HEAD');
+  const commitHash = head.ok ? head.output.trim() : null;
+
+  return {
+    saved: true,
+    commitHash,
+    statusLines: lines
+  };
+}
+
 function ensureOnlyAllowedFilesChanged(allowedFiles) {
   const lines = getPorcelainStatus();
   const changedPaths = parseChangedPaths(lines);
@@ -89,6 +135,7 @@ function commitAndPushMain({ allowedFiles, commitMessage }) {
 module.exports = {
   ensureOnMainBranch,
   ensureCleanWorktree,
+  ensureCleanWorktreeOrAutoSave,
   ensureOnlyAllowedFilesChanged,
   commitAndPushMain
 };

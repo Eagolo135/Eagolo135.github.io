@@ -9,7 +9,7 @@ const { loadEnv } = require('./env');
 const { analyzeRequest, buildEnhancedRequest } = require('./conversation');
 const {
   ensureOnMainBranch,
-  ensureCleanWorktree,
+  ensureCleanWorktreeOrAutoSave,
   ensureOnlyAllowedFilesChanged,
   commitAndPushMain
 } = require('./git');
@@ -156,7 +156,11 @@ async function runRequest(requestText, options = {}) {
 
   assertAllowedFilesExist(allowedFiles);
   ensureOnMainBranch();
-  ensureCleanWorktree();
+  const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'site-agent request' });
+  if (saveResult.saved) {
+    const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
+    console.log(`[site-agent] Auto-saved existing changes with commit/push${ref} to keep worktree clean.`);
+  }
 
   // Analyze request and optionally ask for clarification
   let finalRequest = requestText;
