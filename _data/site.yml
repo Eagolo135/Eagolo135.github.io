@@ -195,3 +195,12 @@ cal_event: 30min
 booking_link: https://cal.com/nicholas-nelson-vwn6zc/30min
 booking_text: Schedule a free 30-minute consultation to discuss how AI can
   transform your business.
+theme:
+  primary_color: "#3E7D44"
+  secondary_color: "#C9B798"
+  accent_color: "#7AA37A"
+  neutral_color: "#F2EDE6"
+  vibe: nature, earth, vintage
+  texture: paper-grain
+  description: Green-centric palette with warm earth tones and a subtle paper
+    texture for a vintage, nature-inspired look.
