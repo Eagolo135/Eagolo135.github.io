@@ -3,9 +3,10 @@
  * Default: OpenAI (requires OPENAI_API_KEY env var).
  * Set SITE_AGENT_PROVIDER=ollama to use local Ollama instead.
  */
+const { API_URLS, DEFAULT_MODELS } = require('./config');
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const OLLAMA_URL = 'http://localhost:11434/api/generate';
+const OPENAI_URL = API_URLS.openai;
+const OLLAMA_URL = API_URLS.ollamaDefault;
 
 function normalizeOllamaGenerateUrl(value) {
   const input = (value || '').trim();
@@ -97,9 +98,9 @@ function resolveConfig() {
   const provider = (process.env.SITE_AGENT_PROVIDER || 'openai').toLowerCase();
   let model;
   if (provider === 'ollama') {
-    model = process.env.SITE_AGENT_MODEL || process.env.OPENAI_MODEL || 'llama3.2:1b';
+    model = process.env.SITE_AGENT_MODEL || process.env.OPENAI_MODEL || DEFAULT_MODELS.ollama;
   } else {
-    model = process.env.OPENAI_MODEL || process.env.SITE_AGENT_MODEL || 'gpt-5-mini';
+    model = process.env.OPENAI_MODEL || process.env.SITE_AGENT_MODEL || DEFAULT_MODELS.openai;
   }
   const apiKey = process.env.OPENAI_API_KEY || '';
   const ollamaUrl = normalizeOllamaGenerateUrl(process.env.SITE_AGENT_OLLAMA_URL || process.env.OLLAMA_URL || OLLAMA_URL);

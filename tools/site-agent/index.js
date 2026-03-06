@@ -15,31 +15,14 @@ const {
   ensureOnlyAllowedFilesChanged,
   commitAndPushMain
 } = require('./git');
+const {
+  ALLOWED_FILES,
+  REDESIGN_KEYWORDS,
+  RETRY_CONFIG
+} = require('./config');
 
-const MAX_RETRIES = 3;
-const DEFAULT_ALLOWED_FILES = [
-  '_data/site.yml',
-  'assets/css/style.css',
-  '_layouts/default.html',
-  'index.html',
-  'services.html',
-  'projects.html',
-  'contact.html',
-  'book.html'
-];
-
-const REDESIGN_KEYWORDS = [
-  'redesign',
-  'makeover',
-  'rework',
-  'modernize',
-  'modernise',
-  'totally different',
-  'different site',
-  'advanced ui',
-  'advanced ux',
-  'feel like a different site'
-];
+const MAX_RETRIES = RETRY_CONFIG.maxRetries;
+const DEFAULT_ALLOWED_FILES = ALLOWED_FILES;
 
 function resolveDefaultContentFile(cwd) {
   const candidate = path.join(cwd, '_data', 'site.yml');
@@ -122,6 +105,12 @@ function readAllowedFiles(allowedFiles) {
     snapshot[file] = fs.readFileSync(file, 'utf8');
   }
   return snapshot;
+}
+
+function restoreSnapshot(snapshot) {
+  for (const [file, content] of Object.entries(snapshot || {})) {
+    fs.writeFileSync(file, content, 'utf8');
+  }
 }
 
 /** Restore allowed files to their git HEAD state (undo failed patch). */
@@ -262,7 +251,9 @@ async function runRequest(requestText, options = {}) {
   const cwd = process.cwd();
   const llmConfig = resolveConfig();
   const buildCommand = process.env.SITE_AGENT_BUILD_CMD || 'bundle exec jekyll build';
-  const visualSimilarityThreshold = Number(process.env.SITE_AGENT_VISUAL_SIMILARITY_THRESHOLD || '72');
+  const visualSimilarityThreshold = Number(
+    process.env.SITE_AGENT_VISUAL_SIMILARITY_THRESHOLD || RETRY_CONFIG.visualSimilarityThreshold
+  );
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
   const mustEnforceDeepRedesign = isRedesignRequest(requestText);
@@ -274,11 +265,13 @@ async function runRequest(requestText, options = {}) {
   }
 
   assertAllowedFilesExist(allowedFiles);
-  ensureOnMainBranch();
-  const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'site-agent request' });
-  if (saveResult.saved) {
-    const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
-    console.log(`[site-agent] Auto-saved existing changes with commit/push${ref} to keep worktree clean.`);
+  if (!dryRun) {
+    ensureOnMainBranch();
+    const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'site-agent request' });
+    if (saveResult.saved) {
+      const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
+      console.log(`[site-agent] Auto-saved existing changes with commit/push${ref} to keep worktree clean.`);
+    }
   }
 
   // Analyze request and optionally ask for clarification
@@ -400,18 +393,24 @@ async function runRequest(requestText, options = {}) {
       changedFiles = applyPatchToFiles({ patch, defaultFile, allowedFiles });
     } catch (err) {
       console.error(`[site-agent] Patch apply failed: ${err.message}`);
-      restoreFiles(allowedFiles);
+      if (dryRun) {
+        restoreSnapshot(snapshot);
+      } else {
+        restoreFiles(allowedFiles);
+      }
       if (attempt === MAX_RETRIES) throw err;
       lastError = `Patch apply error: ${err.message}`;
       continue;
     }
 
     // Safety: abort if patch touched anything outside allowed files
-    try {
-      ensureOnlyAllowedFilesChanged(allowedFiles);
-    } catch (err) {
-      restoreFiles(allowedFiles);
-      throw err; // hard abort, no retry
+    if (!dryRun) {
+      try {
+        ensureOnlyAllowedFilesChanged(allowedFiles);
+      } catch (err) {
+        restoreFiles(allowedFiles);
+        throw err; // hard abort, no retry
+      }
     }
 
     if (changedFiles.length === 0) {
@@ -427,7 +426,11 @@ async function runRequest(requestText, options = {}) {
     console.log(`[site-agent] ${validation.output}`);
 
     if (!validation.ok) {
-      restoreFiles(allowedFiles);
+      if (dryRun) {
+        restoreSnapshot(snapshot);
+      } else {
+        restoreFiles(allowedFiles);
+      }
       lastError = validation.output;
       console.error(`[site-agent] Validation failed, restoring files...`);
       if (attempt === MAX_RETRIES) {
@@ -451,7 +454,11 @@ async function runRequest(requestText, options = {}) {
         if (audit.enabled) {
           console.log(`[site-agent] Visual similarity: ${audit.averageSimilarity}/100`);
           if (audit.averageSimilarity < visualSimilarityThreshold && attempt < MAX_RETRIES) {
-            restoreFiles(allowedFiles);
+            if (dryRun) {
+              restoreSnapshot(snapshot);
+            } else {
+              restoreFiles(allowedFiles);
+            }
             lastError = `Design similarity too low to reference target (${audit.averageSimilarity}/100, threshold ${visualSimilarityThreshold}/100).\n${formatVisualFeedback(audit)}`;
             console.error('[site-agent] Similarity below threshold, retrying with visual feedback...');
             continue;
@@ -465,7 +472,7 @@ async function runRequest(requestText, options = {}) {
     }
 
     if (dryRun) {
-      restoreFiles(allowedFiles);
+      restoreSnapshot(snapshot);
       console.log(`[site-agent] Dry run success. Validated changes: ${changedFiles.join(', ')}`);
       return;
     }

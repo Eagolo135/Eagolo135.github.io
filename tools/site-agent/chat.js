@@ -6,6 +6,7 @@ const { analyzeRequest, buildEnhancedRequest } = require('./conversation');
 const { loadEnv } = require('./env');
 const { resolveConfig } = require('./llm');
 const { ensureOnMainBranch, ensureCleanWorktreeOrAutoSave } = require('./git');
+const { ALLOWED_FILES } = require('./config');
 
 async function ask(rl, prompt) {
   if (rl.closed) {
@@ -23,19 +24,8 @@ async function ask(rl, prompt) {
 }
 
 function readAllowedFilesSnapshot() {
-  const allowedFiles = [
-    '_data/site.yml',
-    'assets/css/style.css',
-    '_layouts/default.html',
-    'index.html',
-    'services.html',
-    'projects.html',
-    'contact.html',
-    'book.html'
-  ];
-  
   const snapshot = {};
-  for (const file of allowedFiles) {
+  for (const file of ALLOWED_FILES) {
     if (fs.existsSync(file)) {
       snapshot[file] = fs.readFileSync(file, 'utf8');
     }

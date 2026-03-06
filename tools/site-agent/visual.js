@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { SCREENSHOT_CONFIG, API_URLS } = require('./config');
 
 function getChromium() {
   try {
@@ -16,9 +17,16 @@ function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-async function screenshotUrl({ browser, url, outputPath, fullPage = true, width = 1440, height = 2200 }) {
+async function screenshotUrl({
+  browser,
+  url,
+  outputPath,
+  fullPage = true,
+  width = SCREENSHOT_CONFIG.width,
+  height = SCREENSHOT_CONFIG.height
+}) {
   const page = await browser.newPage({ viewport: { width, height } });
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+  await page.goto(url, { waitUntil: 'networkidle', timeout: SCREENSHOT_CONFIG.timeout });
   await page.screenshot({ path: outputPath, fullPage });
   await page.close();
   return outputPath;
@@ -106,7 +114,7 @@ async function compareScreenshotsWithOpenAI({ apiKey, model, referenceImagePath,
     ]
   };
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(API_URLS.openai, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

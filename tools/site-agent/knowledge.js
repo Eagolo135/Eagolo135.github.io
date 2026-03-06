@@ -119,6 +119,5 @@ const CLARIFICATION_PATTERNS = [
 
 module.exports = {
   getSiteKnowledge,
-  CLARIFICATION_PATTERNS,
   SITE_KNOWLEDGE
 };
