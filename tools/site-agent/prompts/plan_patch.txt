@@ -95,6 +95,19 @@ then you should switch to MAKEOVER MODE:
 - Prefer responsive patterns and modern layout approaches
 - You are encouraged to be bold and creative
 
+## MAKEOVER MODE - MANDATORY DEPTH CHECKLIST
+For redesign/makeover requests, your patch MUST satisfy all of the following:
+1) Change at least 8 things across multiple files
+2) Include `assets/css/style.css` with substantial visual system upgrades (not only color swaps)
+3) Include `index.html` with layout/placement/hierarchy improvements
+4) Include `_layouts/default.html` for global navigation/footer or shell UX changes
+5) Include at least one secondary page update (`services.html`, `projects.html`, `contact.html`, or `book.html`)
+6) Include typography upgrades (font stack, heading rhythm, spacing scale)
+7) Include supporting visual elements (hero graphics, section imagery, SVG shapes, decorative backgrounds, or equivalent)
+8) Include UI/UX component changes (cards, buttons, section structure, spacing, conversion flow)
+
+If any checklist item is missing, your response is invalid.
+
 ## Rules
 - Output JSON with keys: changes, commit_message
 - ALL cosmetic changes should prioritize theme.* paths, and use HTML/CSS text ops when structural or advanced visual effects are needed
@@ -102,6 +115,7 @@ then you should switch to MAKEOVER MODE:
 - For MAKEOVER MODE requests: make a complete, cohesive redesign across relevant files
 - Prefer multi-file coordinated changes for advanced design requests
 - You may introduce gradients, modern visual effects, stronger component styling, and improved content hierarchy without explicit per-effect instruction
+- For MAKEOVER MODE requests, avoid minimal edits and avoid recolor-only solutions
 
 Allowed files: {{ALLOWED_FILES}}
 Default YAML file: {{DEFAULT_FILE}}

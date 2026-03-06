@@ -28,6 +28,19 @@ const DEFAULT_ALLOWED_FILES = [
   'book.html'
 ];
 
+const REDESIGN_KEYWORDS = [
+  'redesign',
+  'makeover',
+  'rework',
+  'modernize',
+  'modernise',
+  'totally different',
+  'different site',
+  'advanced ui',
+  'advanced ux',
+  'feel like a different site'
+];
+
 function resolveDefaultContentFile(cwd) {
   const candidate = path.join(cwd, '_data', 'site.yml');
   if (fs.existsSync(candidate)) {
@@ -135,6 +148,84 @@ function extractTopLevelKeys(snapshot) {
   return keys.join('\n');
 }
 
+function isRedesignRequest(requestText) {
+  const lowered = (requestText || '').toLowerCase();
+  return REDESIGN_KEYWORDS.some((keyword) => lowered.includes(keyword));
+}
+
+function evaluateRedesignPatch({ patch, defaultFile }) {
+  const secondaryPages = new Set(['services.html', 'projects.html', 'contact.html', 'book.html']);
+  const touchedSecondaryPages = new Set();
+
+  let cssTouched = false;
+  let homepageTouched = false;
+  let layoutTouched = false;
+  let themeSetCount = 0;
+  let hasTypographySignal = false;
+  let hasGraphicsSignal = false;
+  let hasLayoutSignal = false;
+
+  for (const change of patch.changes) {
+    const targetFile = typeof change.file === 'string' && change.file.trim() !== '' ? change.file : defaultFile;
+
+    if (targetFile === 'assets/css/style.css') cssTouched = true;
+    if (targetFile === 'index.html') homepageTouched = true;
+    if (targetFile === '_layouts/default.html') layoutTouched = true;
+    if (secondaryPages.has(targetFile)) touchedSecondaryPages.add(targetFile);
+
+    if ((change.op === 'set' || change.op === 'append') && typeof change.path === 'string') {
+      if (change.path.startsWith('theme.')) themeSetCount += 1;
+      if (change.path.startsWith('theme.typography.')) hasTypographySignal = true;
+      if (
+        change.path.startsWith('theme.layout.') ||
+        change.path.startsWith('theme.buttons.') ||
+        change.path.startsWith('theme.borders.')
+      ) {
+        hasLayoutSignal = true;
+      }
+    }
+
+    const textSignals = [change.value, change.replace, change.find]
+      .filter((part) => typeof part === 'string')
+      .join('\n')
+      .toLowerCase();
+
+    if (textSignals) {
+      if (
+        /background-image|linear-gradient|radial-gradient|url\(|<img|<svg|illustration|graphic|pattern|texture|shape-divider/.test(
+          textSignals
+        )
+      ) {
+        hasGraphicsSignal = true;
+      }
+      if (/font-family|@font-face|fonts\.googleapis|display\s*:\s*grid|display\s*:\s*flex|clamp\(/.test(textSignals)) {
+        hasTypographySignal = true;
+        hasLayoutSignal = true;
+      }
+    }
+  }
+
+  const failures = [];
+  if (patch.changes.length < 8) failures.push('at least 8 coordinated changes are required');
+  if (!cssTouched) failures.push('must include `assets/css/style.css` visual overhaul');
+  if (!homepageTouched) failures.push('must include `index.html` structural/UX updates');
+  if (!layoutTouched) failures.push('must include `_layouts/default.html` for global UX/navigation changes');
+  if (touchedSecondaryPages.size < 1) failures.push('must include at least one secondary page update');
+  if (themeSetCount < 4) failures.push('must include at least 4 `theme.*` YAML updates');
+  if (!hasTypographySignal) failures.push('must include stronger typography/font updates');
+  if (!hasGraphicsSignal) failures.push('must include supporting graphics/media/visual motifs');
+  if (!hasLayoutSignal) failures.push('must include layout/placement UX updates');
+
+  if (failures.length > 0) {
+    return {
+      ok: false,
+      reason: `Redesign patch is too shallow: ${failures.join('; ')}.`
+    };
+  }
+
+  return { ok: true, reason: '' };
+}
+
 async function run() {
   const requestText = process.argv.slice(2).join(' ').trim();
   
@@ -174,8 +265,13 @@ async function runRequest(requestText, options = {}) {
   const visualSimilarityThreshold = Number(process.env.SITE_AGENT_VISUAL_SIMILARITY_THRESHOLD || '72');
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
+  const mustEnforceDeepRedesign = isRedesignRequest(requestText);
+  const dryRun = ['1', 'true', 'yes'].includes((process.env.SITE_AGENT_DRY_RUN || '').toLowerCase());
 
   console.log(`[site-agent] Provider: ${llmConfig.provider}, Model: ${llmConfig.model}`);
+  if (dryRun) {
+    console.log('[site-agent] Dry run enabled: changes will be validated then restored (no commit/push).');
+  }
 
   assertAllowedFilesExist(allowedFiles);
   ensureOnMainBranch();
@@ -287,6 +383,18 @@ async function runRequest(requestText, options = {}) {
       continue;
     }
 
+    if (mustEnforceDeepRedesign) {
+      const redesignCheck = evaluateRedesignPatch({ patch, defaultFile });
+      if (!redesignCheck.ok) {
+        console.error(`[site-agent] ${redesignCheck.reason}`);
+        if (attempt === MAX_RETRIES) {
+          throw new Error(redesignCheck.reason);
+        }
+        lastError = redesignCheck.reason;
+        continue;
+      }
+    }
+
     let changedFiles;
     try {
       changedFiles = applyPatchToFiles({ patch, defaultFile, allowedFiles });
@@ -356,6 +464,12 @@ async function runRequest(requestText, options = {}) {
       }
     }
 
+    if (dryRun) {
+      restoreFiles(allowedFiles);
+      console.log(`[site-agent] Dry run success. Validated changes: ${changedFiles.join(', ')}`);
+      return;
+    }
+
     const commitMessage = safeCommitMessage(patch.commit_message);
     const publish = commitAndPushMain({ allowedFiles, commitMessage });
     console.log(`[site-agent] Success! Pushed: ${publish.changed.join(', ')}`);
@@ -364,7 +478,9 @@ async function runRequest(requestText, options = {}) {
 }
 
 module.exports = {
-  runRequest
+  runRequest,
+  isRedesignRequest,
+  evaluateRedesignPatch
 };
 
 if (require.main === module) {

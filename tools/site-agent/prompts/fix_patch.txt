@@ -13,6 +13,7 @@ Rules:
 - YAML ops: set, append, remove (requires path)
 - Text ops for CSS/HTML: replace_text (requires find + replace), append_text (requires value), set_file_content (requires value)
 - Preserve intent level: if original request is redesign/makeover, keep bold multi-file changes while fixing the failure
+- For redesign/makeover requests, enforce deep scope: multi-file structural updates, typography upgrades, supporting graphics, and clear UX/layout changes (not recolor-only)
 - NEVER include filenames or file paths inside the "path" field
 - Keep all edits inside allowed files
 - Do not delete files
