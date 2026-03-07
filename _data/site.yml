@@ -1,9 +1,10 @@
 name: NeuralForge AI Journal
 title: NeuralForge AI Journal — Futuristic AI Engineering & Product Systems
 tagline: Futuristic AI engineering, dark-mode product design, and production build logs.
-about: I'm an AI engineer and full-stack developer documenting real build systems,
-  autonomous workflows, and high-performance product architecture. NeuralForge
-  focuses on practical implementation, tradeoff analysis, and deployable AI systems.
+about: I'm an AI engineer and full-stack developer documenting real build
+  systems, autonomous workflows, and high-performance product architecture.
+  NeuralForge focuses on practical implementation, tradeoff analysis, and
+  deployable AI systems.
 pages:
   home:
     hero:
@@ -101,28 +102,28 @@ services:
       setting implementation roadmaps.
     icon: 🎯
   - title: Machine Learning Solutions
-    description: End-to-end model design, training, evaluation, and deployment patterns
-      for practical product teams.
+    description: End-to-end model design, training, evaluation, and deployment
+      patterns for practical product teams.
     icon: 🤖
   - title: Natural Language Processing
     description: RAG pipelines, prompt strategy, eval harnesses, and LLM application
       architecture for production systems.
     icon: 💬
   - title: Computer Vision
-    description: Practical visual AI use-cases, multimodal pipelines, and edge-friendly
-      deployment approaches.
+    description: Practical visual AI use-cases, multimodal pipelines, and
+      edge-friendly deployment approaches.
     icon: 👁️
   - title: AI Integration & Deployment
-    description: API design, observability, release workflows, and incident-safe rollout
-      strategies for AI systems.
+    description: API design, observability, release workflows, and incident-safe
+      rollout strategies for AI systems.
     icon: ⚙️
   - title: Training & Workshops
-    description: Technical coaching and learning paths for AI + modern full-stack web
-      development teams.
+    description: Technical coaching and learning paths for AI + modern full-stack
+      web development teams.
     icon: 📚
   - title: AI Automation Audits
-    description: Structured audits to discover automation wins and map implementation
-      complexity.
+    description: Structured audits to discover automation wins and map
+      implementation complexity.
     icon: 🚀
 blog:
   posts:
@@ -234,6 +235,18 @@ projects:
       - RTOS
     demo_link: "#"
     github_link: "#"
+  - title: embedded systems
+    description: "Placeholder project: short description to be updated. This is a
+      test entry for an embedded systems prototype used to demonstrate adding
+      projects programmatically."
+    stack:
+      - C/C++
+      - Embedded Linux
+      - RTOS
+      - TensorFlow Lite
+      - MQTT
+    demo_link: "#"
+    github_link: "#"
 email: nicholasnelson1203@gmail.com
 phone: +1-862-224-7718
 formspree_endpoint: https://formspree.io/f/xpqjpvgn
@@ -317,4 +330,5 @@ theme:
   meta:
     vibe: futuristic dark blue ai journal
     texture: holographic glass + neon gradients
-    description: Dark-blue cyber-inspired design system for AI blogging and product engineering
+    description: Dark-blue cyber-inspired design system for AI blogging and product
+      engineering
