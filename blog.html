@@ -7,9 +7,15 @@ permalink: /blog/
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-left">
+      <div class="hero-left reveal">
+        <span class="kicker">Insights & Tutorials</span>
         <h1>AI & Web Dev Tech Blog</h1>
-        <p class="text-muted">Tutorials, build logs, and architecture notes from real product development.</p>
+        <p class="hero-sub">Tutorials, build logs, and architecture notes from real product development.</p>
+      </div>
+      <div class="hero-right reveal">
+        <div class="hero-media" data-parallax>
+          <img src="{{ site.data.site.images.blog }}" alt="Modern coding blog workspace" />
+        </div>
       </div>
     </div>
   </div>
@@ -17,18 +23,18 @@ permalink: /blog/
 
 <section>
   <div class="container">
-    <div class="section-title">
+    <div class="section-title reveal">
       <h2>Featured Posts</h2>
       <p class="text-muted">Curated articles from this site</p>
     </div>
 
     <div class="blog-grid">
       {% for post in site.data.site.blog.posts %}
-      <article class="card">
+      <article class="card reveal" data-tilt>
         <p class="text-muted" style="margin-bottom:0.45rem">{{ post.date }} · {{ post.read_time }}</p>
         <h3>{{ post.title }}</h3>
         <p class="text-muted">{{ post.excerpt }}</p>
-        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-top:0.8rem;">
+        <div class="tag-list">
           {% for tag in post.tags %}
           <span class="stack-tag">{{ tag }}</span>
           {% endfor %}
@@ -41,7 +47,7 @@ permalink: /blog/
 
 <section style="background:var(--bg-light);">
   <div class="container">
-    <div class="section-title">
+    <div class="section-title reveal">
       <h2>Community Posts</h2>
       <p class="text-muted">Published from the dashboard by signed-in users</p>
     </div>

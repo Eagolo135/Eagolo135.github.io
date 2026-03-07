@@ -65,7 +65,10 @@
   </style>
   {% endif %}
 </head>
-<body>
+<body class="page-{{ page.title | downcase | replace: ' ', '-' }}">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <div class="bg-grid"></div>
   <!-- Header -->
   <div class="header-wrap">
     <header class="navbar">
@@ -84,15 +87,16 @@
           </ul>
         </nav>
 
-        <div style="display:flex;gap:1rem;align-items:center">
-          <a href="{{ '/book/' | relative_url }}" class="btn-nav">Book a Call</a>
+        <div class="nav-actions" style="display:flex;gap:0.7rem;align-items:center">
+          <a href="{{ '/dashboard/' | relative_url }}" class="btn-nav">Creator Dashboard</a>
+          <a href="{{ '/book/' | relative_url }}" class="btn-nav btn-nav-primary">Book a Call</a>
         </div>
       </div>
     </header>
   </div>
 
   <!-- Main -->
-  <main>
+  <main class="site-main">
     {{ content }}
   </main>
 
@@ -133,6 +137,11 @@
       </div>
     </div>
   </footer>
+
+  <script id="site-theme-config" type="application/json">{{ site.data.site.theme | jsonify }}</script>
+  <script id="site-ui-config" type="application/json">{{ site.data.site.ui | jsonify }}</script>
+  <script src="{{ '/assets/js/theme-system.js' | relative_url }}" defer></script>
+  <script src="{{ '/assets/js/ui-effects.js' | relative_url }}" defer></script>
 
   <script>
     // Mobile nav toggle

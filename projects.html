@@ -7,9 +7,15 @@ permalink: /projects/
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-left">
+      <div class="hero-left reveal">
+        <span class="kicker">Work & Experiments</span>
         <h1>{{ site.data.site.pages.projects.hero_title }}</h1>
-        <p class="text-muted">{{ site.data.site.pages.projects.hero_subtitle }}</p>
+        <p class="hero-sub">{{ site.data.site.pages.projects.hero_subtitle }}</p>
+      </div>
+      <div class="hero-right reveal">
+        <div class="hero-media" data-parallax>
+          <img src="{{ site.data.site.images.projects }}" alt="Code editor and project planning board" />
+        </div>
       </div>
     </div>
   </div>
@@ -19,11 +25,11 @@ permalink: /projects/
   <div class="container">
     <div class="projects-grid">
       {% for project in site.data.site.projects %}
-      <div class="project-card card">
+      <div class="project-card card reveal" data-tilt>
         <div class="project-content">
           <h3>{{ project.title }}</h3>
           <p class="text-muted">{{ project.description }}</p>
-          <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+          <div class="tag-list">
             {% for tech in project.stack %}
               <span class="stack-tag">{{ tech }}</span>
             {% endfor %}
@@ -41,11 +47,11 @@ permalink: /projects/
 
 <section style="background:var(--bg-light);">
   <div class="container">
-    <div style="max-width:800px;margin:0 auto;text-align:center">
+    <div style="max-width:800px;margin:0 auto;text-align:center" class="reveal">
       <h2>{{ site.data.site.pages.projects.cta_heading }}</h2>
       <p class="text-muted">{{ site.data.site.pages.projects.cta_text }}</p>
       <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap">
-        <a href="{{ '/book/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.projects.cta_button_primary }}</a>
+        <a href="{{ '/dashboard/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.projects.cta_button_primary }}</a>
         <a href="{{ '/services/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.projects.cta_button_secondary }}</a>
       </div>
     </div>

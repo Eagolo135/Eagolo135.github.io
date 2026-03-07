@@ -252,6 +252,21 @@ cal_event: 30min
 booking_link: https://cal.com/nicholas-nelson-vwn6zc/30min
 booking_text: Schedule a free 30-minute consultation to discuss how AI can
   transform your business.
+ui:
+  density: comfortable
+  surface: glass
+  effects:
+    motion: true
+    orbs: true
+    grid: true
+images:
+  hero: https://images.unsplash.com/photo-1518773553398-650c184e0bb3?auto=format&fit=crop&w=1500&q=80
+  about: https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80
+  services: https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80
+  projects: https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?auto=format&fit=crop&w=1400&q=80
+  blog: https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1400&q=80
+  contact: https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1400&q=80
+  dashboard: https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1400&q=80
 theme:
   colors:
     primary: "#4caf7a"

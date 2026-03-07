@@ -7,9 +7,15 @@ permalink: /contact/
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-left">
+      <div class="hero-left reveal">
+        <span class="kicker">Contact</span>
         <h1>{{ site.data.site.pages.contact.hero_title }}</h1>
-        <p class="text-muted">{{ site.data.site.pages.contact.hero_subtitle }}</p>
+        <p class="hero-sub">{{ site.data.site.pages.contact.hero_subtitle }}</p>
+      </div>
+      <div class="hero-right reveal">
+        <div class="hero-media" data-parallax>
+          <img src="{{ site.data.site.images.contact }}" alt="Digital communications network" />
+        </div>
       </div>
     </div>
   </div>
@@ -17,7 +23,7 @@ permalink: /contact/
 
 <section>
   <div class="container">
-    <div style="max-width:720px;margin:0 auto">
+    <div style="max-width:720px;margin:0 auto" class="reveal">
       <h2 class="center">{{ site.data.site.pages.contact.form_heading }}</h2>
       <form action="{{ site.data.site.formspree_endpoint }}" method="POST" class="contact-form">
         <div class="form-group">
@@ -40,8 +46,8 @@ permalink: /contact/
       </div>
     </div>
 
-    <div style="max-width:900px;margin:3rem auto 0;display:grid;grid-template-columns:1fr 1fr;gap:2rem">
-      <div class="card">
+    <div style="max-width:980px;margin:3rem auto 0;display:grid;grid-template-columns:1fr 1fr;gap:1.2rem">
+      <div class="card reveal" data-tilt>
         <h3>{{ site.data.site.pages.contact.info_heading }}</h3>
         <div style="margin-top:1rem">
           <h4>{{ site.data.site.pages.contact.label_email }}</h4>
@@ -55,7 +61,7 @@ permalink: /contact/
         {% endif %}
       </div>
 
-      <div class="card">
+      <div class="card reveal" data-tilt>
         <h3>{{ site.data.site.pages.contact.social_heading }}</h3>
         <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap">
           {% for social in site.data.site.social %}

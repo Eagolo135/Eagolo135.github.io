@@ -7,9 +7,15 @@ permalink: /book/
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-left">
+      <div class="hero-left reveal">
+        <span class="kicker">Consultation</span>
         <h1>{{ site.data.site.pages.book.hero_title }}</h1>
-        <p class="text-muted">{{ site.data.site.pages.book.hero_subtitle }}</p>
+        <p class="hero-sub">{{ site.data.site.pages.book.hero_subtitle }}</p>
+      </div>
+      <div class="hero-right reveal">
+        <div class="hero-media" data-parallax>
+          <img src="{{ site.data.site.images.services }}" alt="Virtual consultation and planning" />
+        </div>
       </div>
     </div>
   </div>
@@ -18,12 +24,12 @@ permalink: /book/
 <section>
   <div class="container">
     <div class="book-content">
-      <div style="text-align:center;margin-bottom:2rem">
+      <div style="text-align:center;margin-bottom:2rem" class="reveal">
         <h2>{{ site.data.site.pages.book.main_heading }}</h2>
         <p class="text-muted">{{ site.data.site.booking_text }}</p>
       </div>
 
-      <div style="max-width:900px;margin:0 auto">
+      <div style="max-width:900px;margin:0 auto" class="reveal">
         <div style="height:720px;">
           <iframe src="https://cal.com/{{ site.data.site.cal_username }}/{{ site.data.site.cal_event }}" style="width:100%;height:100%;border:0;border-radius:var(--radius-medium);box-shadow:var(--shadow-lg);" frameborder="0" allowfullscreen></iframe>
         </div>
@@ -33,11 +39,11 @@ permalink: /book/
         </div>
       </div>
 
-      <div style="margin-top:3rem">
+      <div style="margin-top:3rem" class="reveal">
         <h3>{{ site.data.site.pages.book.expect_heading }}</h3>
         <div style="max-width:800px;margin:1rem auto 0">
           {% for step in site.data.site.pages.book.expect_steps %}
-          <div style="margin:1.25rem 0">
+          <div class="card" style="margin:0.9rem 0;">
             <h4 style="color:var(--primary-color);">{{ step.icon }} {{ step.title }}</h4>
             <p class="text-muted">{{ step.text }}</p>
           </div>
