@@ -1,9 +1,9 @@
-name: GreenStack AI & Web Dev Blog
-title: GreenStack AI & Web Dev Blog — Build Practical AI Products
-tagline: Practical AI engineering, modern web architecture, and build-in-public lessons.
-about: I'm an AI engineer and web developer sharing practical tutorials, architecture
-  walkthroughs, and case studies on building modern products with AI. This blog
-  focuses on real implementation details, tradeoffs, and production-ready workflows.
+name: NeuralForge AI Journal
+title: NeuralForge AI Journal — Futuristic AI Engineering & Product Systems
+tagline: Futuristic AI engineering, dark-mode product design, and production build logs.
+about: I'm an AI engineer and full-stack developer documenting real build systems,
+  autonomous workflows, and high-performance product architecture. NeuralForge
+  focuses on practical implementation, tradeoff analysis, and deployable AI systems.
 pages:
   home:
     hero:
@@ -138,9 +138,9 @@ blog:
         - Node.js
         - PostgreSQL
     - id: post-002
-      title: Designing Pastel Tech UI Systems That Still Feel High Contrast
-      excerpt: How to build soft-color interfaces that remain accessible, modern, and
-        conversion-friendly.
+      title: Designing Futuristic Dark-Mode UI Systems for AI Products
+      excerpt: Build high-contrast dark-blue interfaces with neon accents that stay
+        accessible, fast, and conversion-focused.
       date: 2026-02-24
       read_time: 6 min read
       tags:
@@ -260,31 +260,31 @@ ui:
     orbs: true
     grid: true
 images:
-  hero: https://images.unsplash.com/photo-1518773553398-650c184e0bb3?auto=format&fit=crop&w=1500&q=80
-  about: https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80
-  services: https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80
-  projects: https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?auto=format&fit=crop&w=1400&q=80
-  blog: https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1400&q=80
-  contact: https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1400&q=80
-  dashboard: https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1400&q=80
+  hero: https://images.unsplash.com/photo-1516110833967-0b5716ca1387?auto=format&fit=crop&w=1500&q=80
+  about: https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1400&q=80
+  services: https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&w=1400&q=80
+  projects: https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1400&q=80
+  blog: https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80
+  contact: https://images.unsplash.com/photo-1488229297570-58520851e868?auto=format&fit=crop&w=1400&q=80
+  dashboard: https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1400&q=80
 theme:
   colors:
-    primary: "#4caf7a"
-    primary_dark: "#2f8f5a"
-    secondary: "#f0f8f3"
-    accent: "#8fd7b3"
-    text_dark: "#11281c"
-    text_light: "#4f6d5c"
-    bg_white: "#ffffff"
-    bg_light: "#f7fcf9"
-    border: "#d8efe0"
+    primary: "#4e7bff"
+    primary_dark: "#2d4fe3"
+    secondary: "#0b1530"
+    accent: "#37d7ff"
+    text_dark: "#e7f0ff"
+    text_light: "#9db3d9"
+    bg_white: "#070d1f"
+    bg_light: "#0d1836"
+    border: "#203a68"
   shadows:
-    small: 0 6px 20px rgba(11,18,32,0.06)
-    large: 0 30px 60px rgba(11,18,32,0.08)
+    small: 0 8px 24px rgba(3,8,22,0.55)
+    large: 0 30px 72px rgba(2,6,20,0.75)
   typography:
-    font_family: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      sans-serif'
-    font_family_heading: '"Space Grotesk", "Inter", -apple-system,
+    font_family: '"Sora", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif'
+    font_family_heading: '"Orbitron", "Sora", "Inter", -apple-system,
       BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     line_height: "1.5"
     font_size_base: 1rem
@@ -315,6 +315,6 @@ theme:
     speed_slow: 0.34s
     easing: cubic-bezier(0.2,0.85,0.32,1)
   meta:
-    vibe: modern pastel tech blog
-    texture: frosted glass + soft gradients
-    description: Pastel green-first modern design system for AI and web dev publishing
+    vibe: futuristic dark blue ai journal
+    texture: holographic glass + neon gradients
+    description: Dark-blue cyber-inspired design system for AI blogging and product engineering
