@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const YAML = require('yaml');
+const { createYamlOperation, createTextOperation } = require('./operations/patch-operation-factory');
 
 function isYamlFile(filePath) {
   return /\.ya?ml$/i.test(filePath);
@@ -131,56 +132,75 @@ function applyChange(doc, change) {
   const path = change.path;
   const tokens = parsePath(path);
 
-  if (!['set', 'append', 'remove'].includes(op)) {
-    throw new Error(`Unsupported op: ${op}`);
-  }
+  const operation = createYamlOperation(op);
 
   const { parent, key } = navigateParent(doc, tokens, op !== 'remove');
   if (parent === undefined) {
     return;
   }
 
-  if (op === 'set') {
-    if (typeof key === 'number') {
-      if (!Array.isArray(parent)) {
-        throw new Error(`set target at ${path} is not an array index.`);
-      }
-      parent[key] = change.value;
-    } else {
-      if (!parent || typeof parent !== 'object') {
-        throw new Error(`set target at ${path} is not an object.`);
-      }
-      parent[key] = change.value;
-    }
-    return;
+  operation({ parent, key, path, change });
+}
+
+function findPattern(text, pattern) {
+  if (text.includes(pattern)) {
+    return { found: true, match: pattern };
   }
 
-  if (op === 'append') {
-    if (!Object.prototype.hasOwnProperty.call(change, 'value')) {
-      throw new Error(`append at ${path} requires value.`);
+  const normalizedPattern = pattern.replace(/\s+/g, ' ').trim();
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const normalizedLine = lines[i].replace(/\s+/g, ' ').trim();
+    if (normalizedLine.includes(normalizedPattern)) {
+      return { found: true, match: lines[i], lineNumber: i + 1 };
     }
-    if (typeof key === 'number') {
-      throw new Error(`append path must point to an array field, not an index: ${path}`);
-    }
-    if (parent[key] === undefined || parent[key] === null) {
-      parent[key] = [];
-    }
-    if (!Array.isArray(parent[key])) {
-      throw new Error(`append target at ${path} is not an array.`);
-    }
-    parent[key].push(change.value);
-    return;
   }
 
-  if (op === 'remove') {
-    if (typeof key === 'number') {
-      if (Array.isArray(parent)) {
-        parent.splice(key, 1);
+  if (/[.*+?^${}()|[\]\\]/.test(pattern)) {
+    try {
+      const re = new RegExp(pattern.replace(/\s+/g, '\\s*'));
+      const match = text.match(re);
+      if (match) {
+        return { found: true, match: match[0], isRegex: true };
       }
-    } else if (parent && typeof parent === 'object') {
-      delete parent[key];
+    } catch {
+      // Invalid regex, continue to failure
     }
   }
+
+  return { found: false };
+}
+
+function findSimilarLines(text, pattern, maxResults = 3) {
+  const keywords = pattern.toLowerCase().replace(/[^\w\s-]/g, ' ').split(/\s+/).filter((word) => word.length > 3);
+  if (keywords.length === 0) return [];
+
+  const lines = text.split('\n');
+  const scored = lines
+    .map((line, idx) => {
+      const lowerLine = line.toLowerCase();
+      const score = keywords.filter((keyword) => lowerLine.includes(keyword)).length;
+      return { line: line.trim(), lineNumber: idx + 1, score };
+    })
+    .filter((item) => item.score > 0 && item.line.length > 0);
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, maxResults);
+}
+
+function applyTextChange({ filePath, change, loadText, textByFile }) {
+  let text = loadText(filePath);
+  const operation = createTextOperation(change.op);
+
+  text = operation({
+    text,
+    change,
+    filePath,
+    findPattern,
+    findSimilarLines
+  });
+
+  textByFile.set(filePath, text);
 }
 
 function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
@@ -208,89 +228,6 @@ function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
     return currentText;
   };
 
-  /**
-   * Try to find the pattern in text with some flexibility:
-   * 1. Exact match
-   * 2. Normalized whitespace match
-   * 3. Regex match (if pattern looks like regex)
-   */
-  const findPattern = (text, pattern) => {
-    // 1. Exact match
-    if (text.includes(pattern)) {
-      return { found: true, match: pattern };
-    }
-
-    // 2. Normalize whitespace and try again
-    const normalizedPattern = pattern.replace(/\s+/g, ' ').trim();
-    const lines = text.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const normalizedLine = lines[i].replace(/\s+/g, ' ').trim();
-      if (normalizedLine.includes(normalizedPattern)) {
-        // Found a match - extract the actual text including original whitespace
-        const lineStart = text.indexOf(lines[i]);
-        return { found: true, match: lines[i], lineNumber: i + 1 };
-      }
-    }
-
-    // 3. Try as regex if it contains regex-like characters
-    if (/[.*+?^${}()|[\]\\]/.test(pattern)) {
-      try {
-        const re = new RegExp(pattern.replace(/\s+/g, '\\s*'));
-        const match = text.match(re);
-        if (match) {
-          return { found: true, match: match[0], isRegex: true };
-        }
-      } catch {
-        // Invalid regex, continue to failure
-      }
-    }
-
-    return { found: false };
-  };
-
-  /**
-   * Find similar lines in the file for error reporting
-   */
-  const findSimilarLines = (text, pattern, maxResults = 3) => {
-    const keywords = pattern.toLowerCase().replace(/[^\w\s-]/g, ' ').split(/\s+/).filter(w => w.length > 3);
-    if (keywords.length === 0) return [];
-
-    const lines = text.split('\n');
-    const scored = lines.map((line, idx) => {
-      const lowerLine = line.toLowerCase();
-      const score = keywords.filter(kw => lowerLine.includes(kw)).length;
-      return { line: line.trim(), lineNumber: idx + 1, score };
-    }).filter(item => item.score > 0 && item.line.length > 0);
-
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, maxResults);
-  };
-
-  const applyTextChange = (filePath, change) => {
-    let text = loadText(filePath);
-
-    if (change.op === 'replace_text') {
-      const result = findPattern(text, change.find);
-      if (!result.found) {
-        const similar = findSimilarLines(text, change.find);
-        let msg = `replace_text find pattern not found in ${filePath}`;
-        if (similar.length > 0) {
-          msg += `\nSimilar lines found:\n${similar.map(s => `  Line ${s.lineNumber}: ${s.line.substring(0, 80)}`).join('\n')}`;
-        }
-        throw new Error(msg);
-      }
-      text = text.replace(result.match, change.replace);
-    } else if (change.op === 'append_text') {
-      text = `${text}${change.value}`;
-    } else if (change.op === 'set_file_content') {
-      text = change.value;
-    } else {
-      throw new Error(`Unsupported text op: ${change.op}`);
-    }
-
-    textByFile.set(filePath, text);
-  };
-
   for (const change of patch.changes) {
     const targetFile = typeof change.file === 'string' && change.file.trim() !== '' ? change.file : defaultFile;
     if (!allowedFiles.includes(targetFile)) {
@@ -311,7 +248,7 @@ function applyPatchToFiles({ patch, defaultFile, allowedFiles }) {
       if (!['replace_text', 'append_text', 'set_file_content'].includes(change.op)) {
         throw new Error(`Operation ${change.op} is not allowed for non-YAML file ${targetFile}`);
       }
-      applyTextChange(targetFile, change);
+      applyTextChange({ filePath: targetFile, change, loadText, textByFile });
       changedTextFiles.add(targetFile);
     }
   }

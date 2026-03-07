@@ -97,7 +97,49 @@ Additional details from user:
 ${clarificationText}`;
 }
 
+async function generateConversationalReply({ message, llmConfig, pendingRequest }) {
+  const prompt = `You are a friendly website copilot in chat mode.
+
+User message:
+"${message}"
+
+Pending change request (if any):
+"${pendingRequest || ''}"
+
+Return a JSON object with:
+- reply: short natural conversational reply (1-3 sentences)
+- suggest_apply: boolean (true only if user seems to want to apply pending changes now)
+
+Rules:
+- Be helpful and concise.
+- If user asks capabilities, explain you can update any website page/content/style/layout in this repo.
+- If there is a pending request and user sounds like approval (e.g., go ahead), set suggest_apply=true.
+- Return JSON only.`;
+
+  const raw = await generateJsonPlan({
+    provider: llmConfig.provider,
+    model: llmConfig.model,
+    prompt,
+    apiKey: llmConfig.apiKey,
+    ollamaUrl: llmConfig.ollamaUrl
+  });
+
+  try {
+    const result = JSON.parse(raw);
+    return {
+      reply: result.reply || 'I can help update your website content, design, layout, and styling. Tell me what you want changed.',
+      suggestApply: Boolean(result.suggest_apply)
+    };
+  } catch {
+    return {
+      reply: 'I can help update your website content, design, layout, and styling. Tell me what you want changed.',
+      suggestApply: false
+    };
+  }
+}
+
 module.exports = {
   analyzeRequest,
-  buildEnhancedRequest
+  buildEnhancedRequest,
+  generateConversationalReply
 };

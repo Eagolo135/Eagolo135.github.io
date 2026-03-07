@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 const readline = require('node:readline');
 const fs = require('node:fs');
-const { runRequest } = require('./index');
-const { analyzeRequest, buildEnhancedRequest } = require('./conversation');
+const { runRequest, buildAllowedFiles } = require('./index');
+const { analyzeRequest, buildEnhancedRequest, generateConversationalReply } = require('./conversation');
 const { loadEnv } = require('./env');
 const { resolveConfig } = require('./llm');
 const { ensureOnMainBranch, ensureCleanWorktreeOrAutoSave } = require('./git');
-const { ALLOWED_FILES } = require('./config');
+const { CommandRegistry } = require('./commands/command-registry');
+const { createDefaultCommands } = require('./commands/default-commands');
 
 async function ask(rl, prompt) {
   if (rl.closed) {
@@ -24,33 +25,14 @@ async function ask(rl, prompt) {
 }
 
 function readAllowedFilesSnapshot() {
+  const allowedFiles = buildAllowedFiles(process.cwd());
   const snapshot = {};
-  for (const file of ALLOWED_FILES) {
+  for (const file of allowedFiles) {
     if (fs.existsSync(file)) {
       snapshot[file] = fs.readFileSync(file, 'utf8');
     }
   }
   return snapshot;
-}
-
-function isExitCommand(input) {
-  const normalized = input.trim().toLowerCase();
-  return ['exit', 'quit', '/exit', '/quit'].includes(normalized);
-}
-
-function isHelpCommand(input) {
-  const normalized = input.trim().toLowerCase();
-  return ['help', '/help'].includes(normalized);
-}
-
-function isApplyCommand(input) {
-  const normalized = input.trim().toLowerCase();
-  return ['yes', 'y', 'apply', '/apply', 'go ahead', 'do it'].includes(normalized);
-}
-
-function isCancelCommand(input) {
-  const normalized = input.trim().toLowerCase();
-  return ['no', 'n', 'cancel', '/cancel', 'stop'].includes(normalized);
 }
 
 function looksLikeEditRequest(input) {
@@ -92,8 +74,171 @@ function printHelp() {
   console.log('  /exit    Quit chat mode');
   console.log('');
   console.log('Chat behavior:');
-  console.log('  - I will discuss your request first.');
-  console.log('  - I will NOT make file changes until you confirm twice (apply -> confirm).');
+  console.log('  - I hold a natural conversation and interpret your intent.');
+  console.log('  - I propose a concrete plan before editing files.');
+  console.log('  - I can update any website content/style/layout file in this repo.');
+}
+
+function printWelcome(saveResult) {
+  console.log('');
+  console.log('🤖 site-agent chat mode');
+  console.log('   Talk to me normally. I will only apply changes after your confirmation.');
+  console.log('   Examples: "change the color to blue", "make buttons less rounded"');
+  console.log('   Commands: /help, /apply, /cancel, /exit');
+  if (saveResult.saved) {
+    const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
+    console.log(`   Auto-saved and pushed local edits${ref} for a clean session.`);
+  }
+  console.log('');
+}
+
+async function buildFinalRequestFromAnalysis({ input, rl, llmConfig }) {
+  console.log('[site-agent] Analyzing request...');
+  const snapshot = readAllowedFilesSnapshot();
+
+  const analysis = await analyzeRequest({
+    request: input,
+    fileSnapshot: snapshot,
+    llmConfig
+  });
+
+  console.log(`[site-agent] Analysis: ${analysis.analysis}`);
+  if (analysis.targetFiles && analysis.targetFiles.length > 0) {
+    console.log(`[site-agent] Target files: ${analysis.targetFiles.join(', ')}`);
+  }
+
+  let finalRequest = input;
+  if (analysis.needsClarification && analysis.questions.length > 0) {
+    console.log('');
+    console.log('I need a bit more info:');
+
+    const clarifications = [];
+    for (const question of analysis.questions) {
+      const answer = (await ask(rl, `  ${question}\n  → `)).trim();
+      if (answer) {
+        clarifications.push({ question, answer });
+      }
+    }
+
+    if (clarifications.length > 0) {
+      finalRequest = buildEnhancedRequest(input, clarifications);
+    }
+  }
+
+  return finalRequest;
+}
+
+async function applyPendingRequest({ state }) {
+  try {
+    console.log('[site-agent] Applying pending request...');
+    await runRequest(state.pendingRequest);
+    state.pendingRequest = null;
+    state.pendingPlan = null;
+    state.awaitingFinalApplyConfirmation = false;
+  } catch (error) {
+    console.error(`[site-agent] ERROR: ${error.message}`);
+    state.awaitingFinalApplyConfirmation = false;
+  }
+}
+
+function createChatState() {
+  return {
+    pendingRequest: null,
+    pendingPlan: null,
+    awaitingFinalApplyConfirmation: false
+  };
+}
+
+function buildPlanPreview({ analysis, finalRequest }) {
+  const targetFiles = Array.isArray(analysis.targetFiles) ? analysis.targetFiles : [];
+  const steps = [];
+  steps.push('Interpret intent and map request to editable website files');
+  if (targetFiles.length > 0) {
+    steps.push(`Update files: ${targetFiles.join(', ')}`);
+  } else {
+    steps.push('Apply coordinated updates across relevant content/layout/style files');
+  }
+  steps.push('Validate YAML and run Jekyll build checks');
+  steps.push('Apply changes and report result');
+
+  return {
+    summary: analysis.analysis || finalRequest,
+    steps
+  };
+}
+
+function printPlan(plan) {
+  console.log('[site-agent] Proposed plan:');
+  console.log(`  Summary: ${plan.summary}`);
+  for (const step of plan.steps) {
+    console.log(`  - ${step}`);
+  }
+}
+
+async function handleInput({ input, rl, state, llmConfig, commandRegistry }) {
+  const normalized = input.trim();
+  if (!normalized) {
+    return { continueLoop: true };
+  }
+
+  const command = commandRegistry.resolve(normalized);
+  if (command) {
+    const result = await command.execute({ state, applyPendingRequest: () => applyPendingRequest({ state }) });
+    if (result.handled) {
+      if (result.exit) {
+        console.log('Goodbye!');
+        return { continueLoop: false };
+      }
+      console.log('');
+      return { continueLoop: true };
+    }
+  }
+
+  if (state.awaitingFinalApplyConfirmation) {
+    console.log('[site-agent] Please reply with "yes" to confirm apply, or "no" to cancel apply.');
+    console.log('');
+    return { continueLoop: true };
+  }
+
+  if (normalized.startsWith('/')) {
+    console.log('[site-agent] Unknown command. Type /help for available commands.');
+    console.log('');
+    return { continueLoop: true };
+  }
+
+  if (!looksLikeEditRequest(normalized) && !state.pendingRequest) {
+    const chatReply = await generateConversationalReply({
+      message: normalized,
+      llmConfig,
+      pendingRequest: state.pendingRequest
+    });
+    console.log(`[site-agent] ${chatReply.reply}`);
+    if (chatReply.suggestApply && state.pendingRequest) {
+      await applyPendingRequest({ state });
+    }
+    console.log('');
+    return { continueLoop: true };
+  }
+
+  try {
+    state.pendingRequest = await buildFinalRequestFromAnalysis({ input: normalized, rl, llmConfig });
+    const analysis = await analyzeRequest({
+      request: state.pendingRequest,
+      fileSnapshot: readAllowedFilesSnapshot(),
+      llmConfig
+    });
+    state.pendingPlan = buildPlanPreview({ analysis, finalRequest: state.pendingRequest });
+    state.awaitingFinalApplyConfirmation = false;
+
+    console.log('');
+    printPlan(state.pendingPlan);
+    console.log('[site-agent] I am ready to apply this change. Reply with "yes" or "/apply".');
+  } catch (error) {
+    console.error(`[site-agent] ERROR: ${error.message}`);
+  }
+
+  console.log('');
+  return { continueLoop: true };
 }
 
 async function main() {
@@ -106,20 +251,14 @@ async function main() {
   const llmConfig = resolveConfig();
   ensureOnMainBranch();
   const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'chat session start' });
+  printWelcome(saveResult);
 
-  console.log('');
-  console.log('🤖 site-agent chat mode');
-  console.log('   Talk to me normally. I will only apply changes after your confirmation.');
-  console.log('   Examples: "change the color to blue", "make buttons less rounded"');
-  console.log('   Commands: /help, /apply, /cancel, /exit');
-  if (saveResult.saved) {
-    const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
-    console.log(`   Auto-saved and pushed local edits${ref} for a clean session.`);
-  }
-  console.log('');
-
-  let pendingRequest = null;
-  let awaitingFinalApplyConfirmation = false;
+  const state = createChatState();
+  const commandRegistry = new CommandRegistry(
+    createDefaultCommands({
+      printHelp
+    })
+  );
 
   while (true) {
     const answer = await ask(rl, '> ');
@@ -128,124 +267,16 @@ async function main() {
       break;
     }
 
-    const input = answer.trim();
-    if (!input) {
-      continue;
-    }
-
-    if (isExitCommand(input)) {
-      console.log('Goodbye!');
+    const result = await handleInput({
+      input: answer,
+      rl,
+      state,
+      llmConfig,
+      commandRegistry
+    });
+    if (!result.continueLoop) {
       break;
     }
-
-    if (isHelpCommand(input)) {
-      printHelp();
-      console.log('');
-      continue;
-    }
-
-    if (awaitingFinalApplyConfirmation) {
-      if (isApplyCommand(input)) {
-        try {
-          console.log('[site-agent] Applying pending request...');
-          await runRequest(pendingRequest);
-          pendingRequest = null;
-          awaitingFinalApplyConfirmation = false;
-        } catch (error) {
-          console.error(`[site-agent] ERROR: ${error.message}`);
-          awaitingFinalApplyConfirmation = false;
-        }
-        console.log('');
-        continue;
-      }
-
-      if (isCancelCommand(input)) {
-        awaitingFinalApplyConfirmation = false;
-        console.log('[site-agent] Apply canceled. Pending change is still queued.');
-        console.log('[site-agent] Use "/apply" again when you are ready, or "/cancel" to discard it.');
-        console.log('');
-        continue;
-      }
-
-      console.log('[site-agent] Please reply with "yes" to confirm apply, or "no" to cancel apply.');
-      console.log('');
-      continue;
-    }
-
-    if (pendingRequest && isApplyCommand(input)) {
-      awaitingFinalApplyConfirmation = true;
-      console.log('[site-agent] Final confirmation: apply this change now? (yes/no)');
-      console.log('');
-      continue;
-    }
-
-    if (pendingRequest && isCancelCommand(input)) {
-      pendingRequest = null;
-      awaitingFinalApplyConfirmation = false;
-      console.log('[site-agent] Pending change canceled.');
-      console.log('');
-      continue;
-    }
-
-    if (input.startsWith('/')) {
-      console.log('[site-agent] Unknown command. Type /help for available commands.');
-      console.log('');
-      continue;
-    }
-
-    try {
-      if (!looksLikeEditRequest(input) && !pendingRequest) {
-        console.log('[site-agent] I can help with full site design edits and makeovers.');
-        console.log('           Example: "give my site a high-level modern redesign with advanced UI effects"');
-        console.log('');
-        continue;
-      }
-
-      console.log('[site-agent] Analyzing request...');
-      const snapshot = readAllowedFilesSnapshot();
-      
-      const analysis = await analyzeRequest({
-        request: input,
-        fileSnapshot: snapshot,
-        llmConfig
-      });
-
-      console.log(`[site-agent] Analysis: ${analysis.analysis}`);
-      
-      if (analysis.targetFiles && analysis.targetFiles.length > 0) {
-        console.log(`[site-agent] Target files: ${analysis.targetFiles.join(', ')}`);
-      }
-
-      // If clarification is needed, ask questions
-      let finalRequest = input;
-      if (analysis.needsClarification && analysis.questions.length > 0) {
-        console.log('');
-        console.log('I need a bit more info:');
-        
-        const clarifications = [];
-        for (const question of analysis.questions) {
-          const answer = (await ask(rl, `  ${question}\n  → `)).trim();
-          if (answer) {
-            clarifications.push({ question, answer });
-          }
-        }
-        
-        if (clarifications.length > 0) {
-          finalRequest = buildEnhancedRequest(input, clarifications);
-        }
-      }
-
-      pendingRequest = finalRequest;
-      awaitingFinalApplyConfirmation = false;
-      console.log('');
-      console.log('[site-agent] I am ready to apply this change.');
-      console.log('[site-agent] Reply with "yes" or "/apply" to start confirmation, then confirm yes/no.');
-      
-    } catch (error) {
-      console.error(`[site-agent] ERROR: ${error.message}`);
-    }
-    
-    console.log(''); // Add spacing between requests
   }
 
   rl.close();

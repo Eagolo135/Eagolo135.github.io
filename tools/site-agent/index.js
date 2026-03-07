@@ -23,6 +23,8 @@ const {
 
 const MAX_RETRIES = RETRY_CONFIG.maxRetries;
 const DEFAULT_ALLOWED_FILES = ALLOWED_FILES;
+const EDITABLE_EXTENSIONS = new Set(['.html', '.css', '.js', '.md', '.xml', '.yml', '.yaml', '.txt', '.json']);
+const EXCLUDED_DIRECTORIES = new Set(['_site', 'node_modules', 'tools', 'scripts', '.git', '.vscode', '.idea']);
 
 function resolveDefaultContentFile(cwd) {
   const candidate = path.join(cwd, '_data', 'site.yml');
@@ -34,6 +36,38 @@ function resolveDefaultContentFile(cwd) {
 
 function loadPromptTemplate(name) {
   return fs.readFileSync(path.join(__dirname, 'prompts', name), 'utf8');
+}
+
+function discoverWebsiteEditableFiles(cwd) {
+  const collected = [];
+
+  function walk(relativeDir) {
+    const absDir = path.join(cwd, relativeDir);
+    const entries = fs.readdirSync(absDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const relPath = path.posix.join(relativeDir.replace(/\\/g, '/'), entry.name).replace(/^\.?\//, '');
+      if (!relPath) {
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        if (EXCLUDED_DIRECTORIES.has(entry.name)) {
+          continue;
+        }
+        walk(relPath);
+        continue;
+      }
+
+      const extension = path.extname(entry.name).toLowerCase();
+      if (EDITABLE_EXTENSIONS.has(extension)) {
+        collected.push(relPath);
+      }
+    }
+  }
+
+  walk('.');
+  return Array.from(new Set(collected));
 }
 
 function renderPrompt(template, values) {
@@ -85,7 +119,8 @@ function buildAllowedFiles(cwd) {
 
   const requestedContent = process.env.SITE_AGENT_CONTENT_FILE || resolveDefaultContentFile(cwd);
   const themePath = process.env.SITE_AGENT_THEME_FILE;
-  const files = [requestedContent, ...DEFAULT_ALLOWED_FILES.filter((file) => file !== requestedContent)];
+  const discovered = discoverWebsiteEditableFiles(cwd);
+  const files = [requestedContent, ...DEFAULT_ALLOWED_FILES.filter((file) => file !== requestedContent), ...discovered];
   if (themePath && themePath.trim() !== '') {
     files.push(themePath.trim());
   }
@@ -239,13 +274,11 @@ async function promptUser(question) {
   });
 }
 
-async function runRequest(requestText, options = {}) {
-  const { interactive = false } = options;
-  
-  if (!requestText) {
-    throw new Error('Usage: .\\site-agent.ps1 "Describe the update request"\n       Or run: npm run chat (for interactive mode)');
-  }
+function isDryRunEnabled() {
+  return ['1', 'true', 'yes'].includes((process.env.SITE_AGENT_DRY_RUN || '').toLowerCase());
+}
 
+function initializeRunContext(requestText) {
   loadEnv();
 
   const cwd = process.cwd();
@@ -257,44 +290,62 @@ async function runRequest(requestText, options = {}) {
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
   const mustEnforceDeepRedesign = isRedesignRequest(requestText);
-  const dryRun = ['1', 'true', 'yes'].includes((process.env.SITE_AGENT_DRY_RUN || '').toLowerCase());
+  const dryRun = isDryRunEnabled();
 
+  return {
+    cwd,
+    llmConfig,
+    buildCommand,
+    visualSimilarityThreshold,
+    allowedFiles,
+    defaultFile,
+    mustEnforceDeepRedesign,
+    dryRun
+  };
+}
+
+function logRunStart({ llmConfig, dryRun }) {
   console.log(`[site-agent] Provider: ${llmConfig.provider}, Model: ${llmConfig.model}`);
   if (dryRun) {
     console.log('[site-agent] Dry run enabled: changes will be validated then restored (no commit/push).');
   }
+}
 
-  assertAllowedFilesExist(allowedFiles);
-  if (!dryRun) {
-    ensureOnMainBranch();
-    const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'site-agent request' });
-    if (saveResult.saved) {
-      const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
-      console.log(`[site-agent] Auto-saved existing changes with commit/push${ref} to keep worktree clean.`);
-    }
+function prepareWorktree({ dryRun }) {
+  if (dryRun) {
+    return;
   }
 
-  // Analyze request and optionally ask for clarification
+  ensureOnMainBranch();
+  const saveResult = ensureCleanWorktreeOrAutoSave({ reason: 'site-agent request' });
+  if (saveResult.saved) {
+    const ref = saveResult.commitHash ? ` (${saveResult.commitHash})` : '';
+    console.log(`[site-agent] Auto-saved existing changes with commit/push${ref} to keep worktree clean.`);
+  }
+}
+
+async function buildFinalRequest({ interactive, requestText, allowedFiles, llmConfig }) {
   let finalRequest = requestText;
+
   if (interactive) {
     console.log('[site-agent] Analyzing your request...');
     const snapshot = readAllowedFiles(allowedFiles);
-    
+
     try {
       const analysis = await analyzeRequest({
         request: requestText,
         fileSnapshot: snapshot,
         llmConfig
       });
-      
+
       if (analysis.targetFiles && analysis.targetFiles.length > 0) {
         console.log(`[site-agent] Will update: ${analysis.targetFiles.join(', ')}`);
       }
-      
+
       if (analysis.needsClarification && analysis.questions.length > 0) {
         console.log('');
         console.log('I need a bit more info to proceed:');
-        
+
         const clarifications = [];
         for (const question of analysis.questions) {
           const answer = await promptUser(`  ${question}\n  → `);
@@ -302,14 +353,13 @@ async function runRequest(requestText, options = {}) {
             clarifications.push({ question, answer });
           }
         }
-        
+
         if (clarifications.length > 0) {
           finalRequest = buildEnhancedRequest(requestText, clarifications);
           console.log('');
         }
       }
-    } catch (err) {
-      // If analysis fails, proceed with original request
+    } catch {
       console.log('[site-agent] Proceeding with request...');
     }
   }
@@ -325,169 +375,226 @@ async function runRequest(requestText, options = {}) {
     console.log(`[site-agent] Research skipped: ${error.message}`);
   }
 
+  return { finalRequest, researchContext };
+}
+
+function restoreByMode({ dryRun, snapshot, allowedFiles }) {
+  if (dryRun) {
+    restoreSnapshot(snapshot);
+    return;
+  }
+  restoreFiles(allowedFiles);
+}
+
+async function executeAttempt({
+  attempt,
+  llmConfig,
+  finalRequest,
+  defaultFile,
+  allowedFiles,
+  dryRun,
+  mustEnforceDeepRedesign,
+  buildCommand,
+  researchContext,
+  requestText,
+  cwd,
+  visualSimilarityThreshold,
+  planTemplate,
+  fixTemplate,
+  previousError
+}) {
+  const snapshot = readAllowedFiles(allowedFiles);
+  const topKeys = extractTopLevelKeys(snapshot);
+
+  const templateValues = {
+    ALLOWED_FILES: allowedFiles.join(', '),
+    DEFAULT_FILE: defaultFile,
+    FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
+    TOP_LEVEL_KEYS: topKeys,
+    USER_REQUEST: finalRequest
+  };
+
+  const prompt =
+    attempt === 1
+      ? renderPrompt(planTemplate, templateValues)
+      : renderPrompt(fixTemplate, { ...templateValues, VALIDATION_ERROR: previousError || '' });
+
+  console.log(`[site-agent] Attempt ${attempt}/${MAX_RETRIES}...`);
+
+  let raw;
+  try {
+    raw = await generateJsonPlan({
+      provider: llmConfig.provider,
+      model: llmConfig.model,
+      prompt,
+      apiKey: llmConfig.apiKey,
+      ollamaUrl: llmConfig.ollamaUrl
+    });
+  } catch (err) {
+    console.error(`[site-agent] LLM call failed: ${err.message}`);
+    return { outcome: 'retry', lastError: err.message };
+  }
+
+  let patch;
+  try {
+    patch = parsePatch(raw);
+  } catch (err) {
+    console.error(`[site-agent] Patch parse failed: ${err.message}`);
+    return { outcome: 'retry', lastError: `Patch parse error: ${err.message}\nRaw model output:\n${raw}` };
+  }
+
+  if (mustEnforceDeepRedesign) {
+    const redesignCheck = evaluateRedesignPatch({ patch, defaultFile });
+    if (!redesignCheck.ok) {
+      console.error(`[site-agent] ${redesignCheck.reason}`);
+      return { outcome: 'retry', lastError: redesignCheck.reason };
+    }
+  }
+
+  let changedFiles;
+  try {
+    changedFiles = applyPatchToFiles({ patch, defaultFile, allowedFiles });
+  } catch (err) {
+    console.error(`[site-agent] Patch apply failed: ${err.message}`);
+    restoreByMode({ dryRun, snapshot, allowedFiles });
+    return { outcome: 'retry', lastError: `Patch apply error: ${err.message}` };
+  }
+
+  if (!dryRun) {
+    try {
+      ensureOnlyAllowedFilesChanged(allowedFiles);
+    } catch (err) {
+      restoreByMode({ dryRun, snapshot, allowedFiles });
+      throw err;
+    }
+  }
+
+  if (changedFiles.length === 0) {
+    const lastError = 'Patch applied but produced no file changes. Use correct top-level YAML paths.';
+    console.error(`[site-agent] ${lastError}`);
+    return { outcome: 'retry', lastError };
+  }
+
+  console.log(`[site-agent] Changed: ${changedFiles.join(', ')}`);
+
+  const validation = validateAll({ allowedFiles, buildCommand });
+  console.log(`[site-agent] ${validation.output}`);
+
+  if (!validation.ok) {
+    restoreByMode({ dryRun, snapshot, allowedFiles });
+    console.error('[site-agent] Validation failed, restoring files...');
+    return { outcome: 'retry', lastError: validation.output };
+  }
+
+  if (researchContext && researchContext.enabled && researchContext.referenceUrl) {
+    try {
+      console.log('[site-agent] Running visual similarity audit (screenshots + vision)...');
+      const audit = await runVisualSimilarityAudit({
+        siteRoot: cwd,
+        referenceUrl: researchContext.referenceUrl,
+        apiKey: llmConfig.apiKey,
+        model: llmConfig.model,
+        designGoal: requestText,
+        pages: ['index.html']
+      });
+
+      if (audit.enabled) {
+        console.log(`[site-agent] Visual similarity: ${audit.averageSimilarity}/100`);
+        if (audit.averageSimilarity < visualSimilarityThreshold && attempt < MAX_RETRIES) {
+          restoreByMode({ dryRun, snapshot, allowedFiles });
+          const lastError = `Design similarity too low to reference target (${audit.averageSimilarity}/100, threshold ${visualSimilarityThreshold}/100).\n${formatVisualFeedback(audit)}`;
+          console.error('[site-agent] Similarity below threshold, retrying with visual feedback...');
+          return { outcome: 'retry', lastError };
+        }
+      } else {
+        console.log(`[site-agent] Visual audit skipped: ${audit.reason}`);
+      }
+    } catch (error) {
+      console.log(`[site-agent] Visual audit unavailable: ${error.message}`);
+    }
+  }
+
+  if (dryRun) {
+    restoreByMode({ dryRun, snapshot, allowedFiles });
+    console.log(`[site-agent] Dry run success. Validated changes: ${changedFiles.join(', ')}`);
+    return { outcome: 'done' };
+  }
+
+  const commitMessage = safeCommitMessage(patch.commit_message);
+  const publish = commitAndPushMain({ allowedFiles, commitMessage });
+  console.log(`[site-agent] Success! Pushed: ${publish.changed.join(', ')}`);
+  return { outcome: 'done' };
+}
+
+async function runRequest(requestText, options = {}) {
+  const { interactive = false } = options;
+  
+  if (!requestText) {
+    throw new Error('Usage: .\\site-agent.ps1 "Describe the update request"\n       Or run: npm run chat (for interactive mode)');
+  }
+
+  const {
+    cwd,
+    llmConfig,
+    buildCommand,
+    visualSimilarityThreshold,
+    allowedFiles,
+    defaultFile,
+    mustEnforceDeepRedesign,
+    dryRun
+  } = initializeRunContext(requestText);
+
+  logRunStart({ llmConfig, dryRun });
+
+  assertAllowedFilesExist(allowedFiles);
+  prepareWorktree({ dryRun });
+
+  const { finalRequest, researchContext } = await buildFinalRequest({
+    interactive,
+    requestText,
+    allowedFiles,
+    llmConfig
+  });
+
   const planTemplate = loadPromptTemplate('plan_patch.txt');
   const fixTemplate = loadPromptTemplate('fix_patch.txt');
 
   let lastError = '';
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt += 1) {
-    const snapshot = readAllowedFiles(allowedFiles);
-    const topKeys = extractTopLevelKeys(snapshot);
+    const result = await executeAttempt({
+      attempt,
+      llmConfig,
+      finalRequest,
+      defaultFile,
+      allowedFiles,
+      dryRun,
+      mustEnforceDeepRedesign,
+      buildCommand,
+      researchContext,
+      requestText,
+      cwd,
+      visualSimilarityThreshold,
+      planTemplate,
+      fixTemplate,
+      previousError: lastError
+    });
 
-    const templateValues = {
-      ALLOWED_FILES: allowedFiles.join(', '),
-      DEFAULT_FILE: defaultFile,
-      FILE_SNAPSHOT_JSON: JSON.stringify(snapshot),
-      TOP_LEVEL_KEYS: topKeys,
-      USER_REQUEST: finalRequest
-    };
-
-    let prompt;
-    if (attempt === 1) {
-      prompt = renderPrompt(planTemplate, templateValues);
-    } else {
-      prompt = renderPrompt(fixTemplate, { ...templateValues, VALIDATION_ERROR: lastError });
-    }
-
-    console.log(`[site-agent] Attempt ${attempt}/${MAX_RETRIES}...`);
-
-    let raw;
-    try {
-      raw = await generateJsonPlan({
-        provider: llmConfig.provider,
-        model: llmConfig.model,
-        prompt,
-        apiKey: llmConfig.apiKey,
-        ollamaUrl: llmConfig.ollamaUrl
-      });
-    } catch (err) {
-      console.error(`[site-agent] LLM call failed: ${err.message}`);
-      if (attempt === MAX_RETRIES) throw err;
-      lastError = err.message;
-      continue;
-    }
-
-    let patch;
-    try {
-      patch = parsePatch(raw);
-    } catch (err) {
-      console.error(`[site-agent] Patch parse failed: ${err.message}`);
-      if (attempt === MAX_RETRIES) throw err;
-      lastError = `Patch parse error: ${err.message}\nRaw model output:\n${raw}`;
-      continue;
-    }
-
-    if (mustEnforceDeepRedesign) {
-      const redesignCheck = evaluateRedesignPatch({ patch, defaultFile });
-      if (!redesignCheck.ok) {
-        console.error(`[site-agent] ${redesignCheck.reason}`);
-        if (attempt === MAX_RETRIES) {
-          throw new Error(redesignCheck.reason);
-        }
-        lastError = redesignCheck.reason;
-        continue;
-      }
-    }
-
-    let changedFiles;
-    try {
-      changedFiles = applyPatchToFiles({ patch, defaultFile, allowedFiles });
-    } catch (err) {
-      console.error(`[site-agent] Patch apply failed: ${err.message}`);
-      if (dryRun) {
-        restoreSnapshot(snapshot);
-      } else {
-        restoreFiles(allowedFiles);
-      }
-      if (attempt === MAX_RETRIES) throw err;
-      lastError = `Patch apply error: ${err.message}`;
-      continue;
-    }
-
-    // Safety: abort if patch touched anything outside allowed files
-    if (!dryRun) {
-      try {
-        ensureOnlyAllowedFilesChanged(allowedFiles);
-      } catch (err) {
-        restoreFiles(allowedFiles);
-        throw err; // hard abort, no retry
-      }
-    }
-
-    if (changedFiles.length === 0) {
-      lastError = 'Patch applied but produced no file changes. Use correct top-level YAML paths.';
-      console.error(`[site-agent] ${lastError}`);
-      if (attempt === MAX_RETRIES) throw new Error(lastError);
-      continue;
-    }
-
-    console.log(`[site-agent] Changed: ${changedFiles.join(', ')}`);
-
-    const validation = validateAll({ allowedFiles, buildCommand });
-    console.log(`[site-agent] ${validation.output}`);
-
-    if (!validation.ok) {
-      if (dryRun) {
-        restoreSnapshot(snapshot);
-      } else {
-        restoreFiles(allowedFiles);
-      }
-      lastError = validation.output;
-      console.error(`[site-agent] Validation failed, restoring files...`);
-      if (attempt === MAX_RETRIES) {
-        throw new Error(`Validation failed after ${MAX_RETRIES} attempts.\n${lastError}`);
-      }
-      continue;
-    }
-
-    if (researchContext && researchContext.enabled && researchContext.referenceUrl) {
-      try {
-        console.log('[site-agent] Running visual similarity audit (screenshots + vision)...');
-        const audit = await runVisualSimilarityAudit({
-          siteRoot: cwd,
-          referenceUrl: researchContext.referenceUrl,
-          apiKey: llmConfig.apiKey,
-          model: llmConfig.model,
-          designGoal: requestText,
-          pages: ['index.html']
-        });
-
-        if (audit.enabled) {
-          console.log(`[site-agent] Visual similarity: ${audit.averageSimilarity}/100`);
-          if (audit.averageSimilarity < visualSimilarityThreshold && attempt < MAX_RETRIES) {
-            if (dryRun) {
-              restoreSnapshot(snapshot);
-            } else {
-              restoreFiles(allowedFiles);
-            }
-            lastError = `Design similarity too low to reference target (${audit.averageSimilarity}/100, threshold ${visualSimilarityThreshold}/100).\n${formatVisualFeedback(audit)}`;
-            console.error('[site-agent] Similarity below threshold, retrying with visual feedback...');
-            continue;
-          }
-        } else {
-          console.log(`[site-agent] Visual audit skipped: ${audit.reason}`);
-        }
-      } catch (error) {
-        console.log(`[site-agent] Visual audit unavailable: ${error.message}`);
-      }
-    }
-
-    if (dryRun) {
-      restoreSnapshot(snapshot);
-      console.log(`[site-agent] Dry run success. Validated changes: ${changedFiles.join(', ')}`);
+    if (result.outcome === 'done') {
       return;
     }
 
-    const commitMessage = safeCommitMessage(patch.commit_message);
-    const publish = commitAndPushMain({ allowedFiles, commitMessage });
-    console.log(`[site-agent] Success! Pushed: ${publish.changed.join(', ')}`);
-    return;
+    lastError = result.lastError || 'Unknown retry error';
+    if (attempt === MAX_RETRIES) {
+      throw new Error(lastError);
+    }
   }
 }
 
 module.exports = {
   runRequest,
   isRedesignRequest,
-  evaluateRedesignPatch
+  evaluateRedesignPatch,
+  buildAllowedFiles
 };
 
 if (require.main === module) {
