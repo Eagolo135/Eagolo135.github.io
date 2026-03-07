@@ -90,9 +90,20 @@ function ensureCleanWorktreeOrAutoSave({ reason = 'site-agent run' } = {}) {
   const timestamp = new Date().toISOString();
   const label = `site-agent auto-save before run (${reason}) ${timestamp}`;
 
-  const add = runCommand('git add -A');
-  if (!add.ok) {
-    throw new Error(`Failed to stage changes for auto-save:\n${add.output}`);
+  const changedPaths = parseChangedPaths(lines);
+  const stageable = filterStageablePaths(changedPaths);
+  if (stageable.length === 0) {
+    throw new Error(
+      'Working tree has changes, but none can be safely staged (likely ignored files only).\n' +
+      lines.join('\n')
+    );
+  }
+
+  for (const file of stageable) {
+    const add = runCommand(`git add -- ${quotePath(file)}`);
+    if (!add.ok) {
+      throw new Error(`Failed to stage ${file} for auto-save:\n${add.output}`);
+    }
   }
 
   const commit = runCommand(`git commit -m "${label.replace(/"/g, '\\"')}"`);
@@ -102,7 +113,10 @@ function ensureCleanWorktreeOrAutoSave({ reason = 'site-agent run' } = {}) {
 
   const push = runCommand('git push origin main');
   if (!push.ok) {
-    throw new Error(`Failed to push auto-save commit:\n${push.output}`);
+    runCommand('git reset --mixed HEAD~1');
+    throw new Error(
+      `Failed to push auto-save commit (local auto-save commit was rolled back):\n${push.output}`
+    );
   }
 
   const verify = getPorcelainStatus();
