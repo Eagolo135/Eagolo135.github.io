@@ -197,6 +197,18 @@ projects:
       - TensorFlow Lite
     demo_link: "#"
     github_link: "#"
+  - title: Embedded Systems Edge Prototype
+    description: "Test project: prototype edge device for sensor fusion and
+      on-device ML used for real-time analytics and low-latency inference in
+      field conditions."
+    stack:
+      - C/C++
+      - Embedded Linux
+      - TensorFlow Lite
+      - MQTT
+      - RTOS
+    demo_link: "#"
+    github_link: "#"
 email: nicholasnelson1203@gmail.com
 phone: +1-862-224-7718
 formspree_endpoint: https://formspree.io/f/xpqjpvgn

@@ -30,6 +30,9 @@ function getPorcelainStatus() {
 function parseChangedPaths(statusLines) {
   const paths = [];
   for (const line of statusLines) {
+    if (line.startsWith('!! ')) {
+      continue;
+    }
     const body = line.slice(3);
     if (body.includes(' -> ')) {
       const parts = body.split(' -> ');
@@ -39,6 +42,32 @@ function parseChangedPaths(statusLines) {
     }
   }
   return paths;
+}
+
+function quotePath(path) {
+  return `"${String(path).replace(/"/g, '\\"')}"`;
+}
+
+function isIgnoredPath(path) {
+  const result = runCommand(`git check-ignore --quiet -- ${quotePath(path)}`);
+  if (result.status === 0) {
+    return true;
+  }
+  if (result.status === 1) {
+    return false;
+  }
+  const output = (result.output || '').trim();
+  throw new Error(`Unable to evaluate ignore rules for ${path}:\n${output}`);
+}
+
+function filterStageablePaths(paths) {
+  const stageable = [];
+  for (const path of paths) {
+    if (!isIgnoredPath(path)) {
+      stageable.push(path);
+    }
+  }
+  return stageable;
 }
 
 function ensureCleanWorktree() {
@@ -106,13 +135,16 @@ function ensureOnlyAllowedFilesChanged(allowedFiles) {
 
 function commitAndPushMain({ allowedFiles, commitMessage }) {
   const changed = ensureOnlyAllowedFilesChanged(allowedFiles);
-  if (changed.length === 0) {
+  const stageable = filterStageablePaths(changed);
+  if (stageable.length === 0) {
     throw new Error('No changes detected to commit.');
   }
 
-  const add = runCommand(`git add ${changed.map((file) => `"${file}"`).join(' ')}`);
-  if (!add.ok) {
-    throw new Error(`git add failed:\n${add.output}`);
+  for (const file of stageable) {
+    const add = runCommand(`git add -- ${quotePath(file)}`);
+    if (!add.ok) {
+      throw new Error(`git add failed for ${file}:\n${add.output}`);
+    }
   }
 
   const escapedMessage = commitMessage.replace(/"/g, '\\"');
@@ -127,7 +159,7 @@ function commitAndPushMain({ allowedFiles, commitMessage }) {
   }
 
   return {
-    changed,
+    changed: stageable,
     output: `${commit.output}\n${push.output}`.trim()
   };
 }
