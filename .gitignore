@@ -27,6 +27,7 @@ Thumbs.db
 node_modules/
 package-lock.json
 yarn.lock
+apps/**/.next/
 
 # Local environment variables
 .env

@@ -17,6 +17,16 @@ function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
+function resolveOutputPath(outputPath, fallbackDir, fallbackName) {
+  if (outputPath && outputPath.trim()) {
+    const normalized = path.resolve(outputPath);
+    ensureDir(path.dirname(normalized));
+    return normalized;
+  }
+  ensureDir(fallbackDir);
+  return path.join(fallbackDir, fallbackName);
+}
+
 async function screenshotUrl({
   browser,
   url,
@@ -75,6 +85,101 @@ async function takeDesignScreenshots({ siteRoot, referenceUrl, localPages = ['in
 function toDataUrlFromPng(filePath) {
   const b64 = fs.readFileSync(filePath).toString('base64');
   return `data:image/png;base64,${b64}`;
+}
+
+async function compareImagesWithOpenAI({ apiKey, model, referenceImagePath, candidateImagePath, goal }) {
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is required for image comparison');
+  }
+
+  const body = {
+    model,
+    response_format: { type: 'json_object' },
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a strict visual similarity reviewer. Return JSON only.'
+      },
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `Compare the reference image to the candidate image. Goal: ${goal || 'recreate as closely as possible'}. Return JSON keys: similarity_score (0-100), summary, gaps (array), recommendations (array).`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: toDataUrlFromPng(referenceImagePath)
+            }
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: toDataUrlFromPng(candidateImagePath)
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  const response = await fetch(API_URLS.openai, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Image compare failed (${response.status}): ${text}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('Image compare returned empty content');
+  }
+
+  return JSON.parse(content);
+}
+
+async function capturePageScreenshot({
+  siteRoot,
+  page = 'index.html',
+  url,
+  outputPath,
+  fullPage = true,
+  width = SCREENSHOT_CONFIG.width,
+  height = SCREENSHOT_CONFIG.height
+}) {
+  const targetDir = path.join(siteRoot, '.site-agent', 'shots');
+  const finalPath = resolveOutputPath(outputPath, targetDir, `capture-${Date.now()}.png`);
+
+  const chromium = getChromium();
+  const browser = await chromium.launch({ headless: true });
+
+  try {
+    const targetUrl = url
+      ? url
+      : toFileUrl(path.join(siteRoot, '_site', page));
+
+    await screenshotUrl({
+      browser,
+      url: targetUrl,
+      outputPath: finalPath,
+      fullPage,
+      width,
+      height
+    });
+  } finally {
+    await browser.close();
+  }
+
+  return finalPath;
 }
 
 async function compareScreenshotsWithOpenAI({ apiKey, model, referenceImagePath, localImagePath, designGoal }) {
@@ -194,6 +299,8 @@ async function runVisualSimilarityAudit({
 }
 
 module.exports = {
+  capturePageScreenshot,
+  compareImagesWithOpenAI,
   takeDesignScreenshots,
   runVisualSimilarityAudit
 };

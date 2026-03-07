@@ -228,6 +228,39 @@ $env:OPENAI_API_KEY = "sk-..."
 .\site-agent.ps1 "Refresh the about section copy to be more concise and results-focused"
 ```
 
+## MCP Server + Next.js Agent Console
+
+This repo now includes an MCP stdio server and a lightweight Next.js API integration layer.
+
+### MCP tools
+
+- `site_plan_change` - dry-run style planning for requested site edits
+- `site_apply_change` - apply requested site edits (`publish` optional)
+- `site_add_project` - structured project addition helper
+- `site_validate` - YAML + Jekyll validation
+- `site_screenshot_page` - capture full-page screenshot for local built page or URL
+- `site_recreate_from_image` - iterative image-to-site recreation loop with visual comparison
+
+### Run MCP server
+
+```powershell
+npm run mcp
+```
+
+### Run Next.js console (API routes)
+
+```powershell
+npm run console:dev
+```
+
+Available API endpoints in `apps/agent-console`:
+
+- `POST /api/agent/plan`
+- `POST /api/agent/apply`
+- `GET /api/agent/validate`
+- `POST /api/agent/screenshot`
+- `POST /api/agent/recreate`
+
 ## Pages Overview
 
 ### Home Page

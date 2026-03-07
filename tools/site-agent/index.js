@@ -278,7 +278,7 @@ function isDryRunEnabled() {
   return ['1', 'true', 'yes'].includes((process.env.SITE_AGENT_DRY_RUN || '').toLowerCase());
 }
 
-function initializeRunContext(requestText) {
+function initializeRunContext(requestText, options = {}) {
   loadEnv();
 
   const cwd = process.cwd();
@@ -290,7 +290,8 @@ function initializeRunContext(requestText) {
   const allowedFiles = buildAllowedFiles(cwd);
   const defaultFile = allowedFiles[0];
   const mustEnforceDeepRedesign = isRedesignRequest(requestText);
-  const dryRun = isDryRunEnabled();
+  const dryRun = typeof options.dryRun === 'boolean' ? options.dryRun : isDryRunEnabled();
+  const noPublish = Boolean(options.noPublish);
 
   return {
     cwd,
@@ -300,19 +301,24 @@ function initializeRunContext(requestText) {
     allowedFiles,
     defaultFile,
     mustEnforceDeepRedesign,
-    dryRun
+    dryRun,
+    noPublish
   };
 }
 
-function logRunStart({ llmConfig, dryRun }) {
+function logRunStart({ llmConfig, dryRun, noPublish }) {
   console.log(`[site-agent] Provider: ${llmConfig.provider}, Model: ${llmConfig.model}`);
   if (dryRun) {
     console.log('[site-agent] Dry run enabled: changes will be validated then restored (no commit/push).');
+    return;
+  }
+  if (noPublish) {
+    console.log('[site-agent] No-publish mode enabled: changes are applied locally without git commit/push.');
   }
 }
 
-function prepareWorktree({ dryRun }) {
-  if (dryRun) {
+function prepareWorktree({ dryRun, noPublish }) {
+  if (dryRun || noPublish) {
     return;
   }
 
@@ -393,6 +399,7 @@ async function executeAttempt({
   defaultFile,
   allowedFiles,
   dryRun,
+  noPublish,
   mustEnforceDeepRedesign,
   buildCommand,
   researchContext,
@@ -517,13 +524,33 @@ async function executeAttempt({
   if (dryRun) {
     restoreByMode({ dryRun, snapshot, allowedFiles });
     console.log(`[site-agent] Dry run success. Validated changes: ${changedFiles.join(', ')}`);
-    return { outcome: 'done' };
+    return {
+      outcome: 'done',
+      mode: 'plan',
+      changedFiles,
+      validation
+    };
+  }
+
+  if (noPublish) {
+    console.log(`[site-agent] Local apply success. Updated: ${changedFiles.join(', ')}`);
+    return {
+      outcome: 'done',
+      mode: 'local_apply',
+      changedFiles,
+      validation
+    };
   }
 
   const commitMessage = safeCommitMessage(patch.commit_message);
   const publish = commitAndPushMain({ allowedFiles, commitMessage });
   console.log(`[site-agent] Success! Pushed: ${publish.changed.join(', ')}`);
-  return { outcome: 'done' };
+  return {
+    outcome: 'done',
+    mode: 'publish',
+    changedFiles: publish.changed,
+    validation
+  };
 }
 
 async function runRequest(requestText, options = {}) {
@@ -541,13 +568,14 @@ async function runRequest(requestText, options = {}) {
     allowedFiles,
     defaultFile,
     mustEnforceDeepRedesign,
-    dryRun
-  } = initializeRunContext(requestText);
+    dryRun,
+    noPublish
+  } = initializeRunContext(requestText, options);
 
-  logRunStart({ llmConfig, dryRun });
+  logRunStart({ llmConfig, dryRun, noPublish });
 
   assertAllowedFilesExist(allowedFiles);
-  prepareWorktree({ dryRun });
+  prepareWorktree({ dryRun, noPublish });
 
   const { finalRequest, researchContext } = await buildFinalRequest({
     interactive,
@@ -568,6 +596,7 @@ async function runRequest(requestText, options = {}) {
       defaultFile,
       allowedFiles,
       dryRun,
+      noPublish,
       mustEnforceDeepRedesign,
       buildCommand,
       researchContext,
@@ -580,7 +609,13 @@ async function runRequest(requestText, options = {}) {
     });
 
     if (result.outcome === 'done') {
-      return;
+      return {
+        ok: true,
+        mode: result.mode,
+        changedFiles: result.changedFiles || [],
+        validation: result.validation || null,
+        attempts: attempt
+      };
     }
 
     lastError = result.lastError || 'Unknown retry error';
@@ -588,6 +623,15 @@ async function runRequest(requestText, options = {}) {
       throw new Error(lastError);
     }
   }
+
+  return {
+    ok: false,
+    mode: dryRun ? 'plan' : noPublish ? 'local_apply' : 'publish',
+    changedFiles: [],
+    validation: null,
+    attempts: MAX_RETRIES,
+    error: lastError
+  };
 }
 
 module.exports = {
