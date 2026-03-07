@@ -82,6 +82,42 @@ Edit CSS variables in `assets/css/style.css`:
 
 5. Visit `http://localhost:4000` in your browser
 
+## Tech Blog + Dashboard Features
+
+This site now includes:
+
+- A modern pastel-green tech blog design
+- `Blog` page (`/blog`) with seeded featured posts
+- `Dashboard` page (`/dashboard`) for creator workflow
+- Google sign-in (Firebase Auth)
+- User post publishing to Firestore (`blogPosts` collection)
+- Community post rendering on `/blog`
+
+### Firebase setup (required for login + dashboard publishing)
+
+1. Create a Firebase project.
+2. Enable **Authentication → Google** provider.
+3. Enable **Firestore Database**.
+4. Open `assets/js/firebase-config.js` and fill in your web app config values.
+5. Deploy and test login from `/dashboard`.
+
+Example Firestore rules for this dashboard flow:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+   match /databases/{database}/documents {
+      match /blogPosts/{postId} {
+         allow read: if true;
+         allow create: if request.auth != null
+                              && request.resource.data.authorUid == request.auth.uid;
+         allow update, delete: if request.auth != null
+                                          && resource.data.authorUid == request.auth.uid;
+      }
+   }
+}
+```
+
 ## Deployment to GitHub Pages
 
 1. Create a new repository named `yourusername.github.io`

@@ -10,15 +10,18 @@ title: Home
         <h1>{{ site.data.site.name }}</h1>
         <p>{{ site.data.site.tagline }}</p>
         <div class="hero-cta">
-          <a href="{{ '/projects/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.hero.button_projects }}</a>
-          <a href="{{ '/book/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.home.hero.button_book }}</a>
+          <a href="{{ '/blog/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.hero.button_projects }}</a>
+          <a href="{{ '/dashboard/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.home.hero.button_book }}</a>
         </div>
       </div>
 
       <div class="hero-right">
-        <!-- Decorative panel for product / imagery - placeholder for a refined visual -->
-        <div style="width:360px;max-width:40%;background:linear-gradient(180deg,rgba(10,132,255,0.06),rgba(10,132,255,0.02));border-radius:12px;padding:2rem;box-shadow:var(--shadow-lg);text-align:center;">
-          <img src="/assets/hero-visual.svg" alt="" style="width:100%;height:auto;opacity:0.95;" />
+        <div class="tech-panel">
+          <span class="tech-chip">AI Engineering</span>
+          <span class="tech-chip">Web Development</span>
+          <span class="tech-chip">Tech Strategy</span>
+          <h3>Build. Ship. Explain.</h3>
+          <p>Practical tutorials, architecture deep-dives, and case studies for modern AI-driven web products.</p>
         </div>
       </div>
     </div>
@@ -61,18 +64,19 @@ title: Home
 <section>
   <div class="container">
     <div class="section-title">
-      <h2>{{ site.data.site.pages.home.projects_title }}</h2>
-      <p class="text-muted">{{ site.data.site.pages.home.projects_subtitle }}</p>
+      <h2>{{ site.data.site.pages.home.blog_title }}</h2>
+      <p class="text-muted">{{ site.data.site.pages.home.blog_subtitle }}</p>
     </div>
     <div class="projects-grid">
-      {% for project in site.data.site.projects limit:3 %}
+      {% for post in site.data.site.blog.posts limit:3 %}
       <div class="project-card card">
         <div class="project-content">
-          <h3>{{ project.title }}</h3>
-          <p class="text-muted">{{ project.description }}</p>
+          <p class="text-muted" style="margin-bottom:0.5rem">{{ post.date }} · {{ post.read_time }}</p>
+          <h3>{{ post.title }}</h3>
+          <p class="text-muted">{{ post.excerpt }}</p>
           <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap">
-            {% for tech in project.stack %}
-              <span class="stack-tag">{{ tech }}</span>
+            {% for tag in post.tags %}
+              <span class="stack-tag">{{ tag }}</span>
             {% endfor %}
           </div>
         </div>
@@ -81,7 +85,7 @@ title: Home
     </div>
 
     <div style="text-align:center;margin-top:2rem">
-      <a href="{{ '/projects/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.home.projects_button }}</a>
+      <a href="{{ '/blog/' | relative_url }}" class="btn btn-outline">{{ site.data.site.pages.home.blog_button }}</a>
     </div>
   </div>
 </section>
@@ -91,7 +95,7 @@ title: Home
     <div style="max-width:800px;margin:0 auto;text-align:center">
       <h2>{{ site.data.site.pages.home.cta_heading }}</h2>
       <p class="text-muted" style="margin-bottom:1.5rem">{{ site.data.site.booking_text }}</p>
-      <a href="{{ '/book/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.cta_button }}</a>
+      <a href="{{ '/dashboard/' | relative_url }}" class="btn btn-primary">{{ site.data.site.pages.home.cta_button }}</a>
     </div>
   </div>
 </section>

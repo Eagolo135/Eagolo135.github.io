@@ -1,0 +1,73 @@
+---
+layout: default
+title: Dashboard
+permalink: /dashboard/
+---
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1>Creator Dashboard</h1>
+        <p class="text-muted">Sign in with Google, publish your posts, and view project work from one place.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container dashboard-grid">
+    <div class="dashboard-card">
+      <h3>Authentication</h3>
+      <p id="auth-status" class="text-muted">Checking sign-in status…</p>
+      <div class="auth-actions" style="margin-top:0.8rem;">
+        <button id="sign-in-btn" class="btn btn-primary" type="button">Sign in with Google</button>
+        <button id="sign-out-btn" class="btn btn-outline" type="button">Sign out</button>
+      </div>
+      <p class="text-muted" style="margin-top:0.9rem;">You must sign in before publishing posts.</p>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>Publish a Blog Post</h3>
+      <form id="post-form">
+        <div class="form-group">
+          <label for="post-title">Title</label>
+          <input id="post-title" name="title" required maxlength="120" />
+        </div>
+        <div class="form-group">
+          <label for="post-excerpt">Excerpt</label>
+          <textarea id="post-excerpt" name="excerpt" rows="3" required maxlength="220"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="post-content">Content</label>
+          <textarea id="post-content" name="content" rows="7" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="post-tags">Tags (comma separated)</label>
+          <input id="post-tags" name="tags" placeholder="AI, React, Architecture" />
+        </div>
+        <button class="btn btn-primary" type="submit">Publish Post</button>
+      </form>
+      <p id="post-form-message" class="text-muted" style="margin-top:0.8rem;"></p>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--bg-light);">
+  <div class="container dashboard-grid">
+    <div class="dashboard-card">
+      <h3>Your Published Posts</h3>
+      <div id="user-posts"></div>
+      <div id="user-posts-empty" class="list-empty" style="margin-top:0.8rem;">No posts yet. Publish your first post above.</div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>Projects</h3>
+      <p class="text-muted">Reference your projects while writing posts.</p>
+      <div id="project-list"></div>
+    </div>
+  </div>
+</section>
+
+<script id="static-projects-json" type="application/json">{{ site.data.site.projects | jsonify }}</script>
+<script type="module" src="{{ '/assets/js/dashboard.js' | relative_url }}"></script>

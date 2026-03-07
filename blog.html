@@ -1,0 +1,54 @@
+---
+layout: default
+title: Blog
+permalink: /blog/
+---
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1>AI & Web Dev Tech Blog</h1>
+        <p class="text-muted">Tutorials, build logs, and architecture notes from real product development.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-title">
+      <h2>Featured Posts</h2>
+      <p class="text-muted">Curated articles from this site</p>
+    </div>
+
+    <div class="blog-grid">
+      {% for post in site.data.site.blog.posts %}
+      <article class="card">
+        <p class="text-muted" style="margin-bottom:0.45rem">{{ post.date }} · {{ post.read_time }}</p>
+        <h3>{{ post.title }}</h3>
+        <p class="text-muted">{{ post.excerpt }}</p>
+        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-top:0.8rem;">
+          {% for tag in post.tags %}
+          <span class="stack-tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--bg-light);">
+  <div class="container">
+    <div class="section-title">
+      <h2>Community Posts</h2>
+      <p class="text-muted">Published from the dashboard by signed-in users</p>
+    </div>
+
+    <div id="community-posts" class="blog-grid"></div>
+    <div id="community-posts-empty" class="list-empty" style="margin-top:0.9rem;">No community posts yet.</div>
+  </div>
+</section>
+
+<script type="module" src="{{ '/assets/js/blog.js' | relative_url }}"></script>

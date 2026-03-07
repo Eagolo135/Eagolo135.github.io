@@ -1,42 +1,39 @@
-name: AI and Cybersecurity Consultant
-title: AI and Cybersecurity Consultant — Minimal AI, Maximum Impact
-tagline: Simple. Powerful. Intelligent.
-about: I'm an AI consultant specializing in helping businesses leverage
-  artificial intelligence to solve complex problems, automate processes, and
-  drive innovation. With expertise in machine learning, natural language
-  processing, and AI strategy, I transform challenges into opportunities.
+name: GreenStack AI & Web Dev Blog
+title: GreenStack AI & Web Dev Blog — Build Practical AI Products
+tagline: Practical AI engineering, modern web architecture, and build-in-public lessons.
+about: I'm an AI engineer and web developer sharing practical tutorials, architecture
+  walkthroughs, and case studies on building modern products with AI. This blog
+  focuses on real implementation details, tradeoffs, and production-ready workflows.
 pages:
   home:
     hero:
-      button_projects: See Work
-      button_book: Book
-    about_title: About
-    services_title: Services
-    services_subtitle: Comprehensive AI solutions tailored to your needs
-    services_button: View All Services
-    projects_title: Featured Projects
-    projects_subtitle: Recent success stories and client work
-    projects_button: View All Projects
-    cta_heading: Ready to Supercharge Your Business with AI?
-    cta_button: Get Started
+      button_projects: Read The Blog
+      button_book: Open Dashboard
+    about_title: Why This Blog Exists
+    services_title: Core Topics
+    services_subtitle: Technical areas covered in deep, practical guides
+    services_button: Explore All Topics
+    blog_title: Latest Posts
+    blog_subtitle: Fresh write-ups on AI product engineering and web development
+    blog_button: View All Blog Posts
+    cta_heading: Want to publish your own write-up?
+    cta_button: Go To Dashboard
   services:
-    hero_title: Services
-    hero_subtitle: Comprehensive AI solutions to drive your business forward
-    cta_heading: Let's Discuss Your Project
-    cta_text: Looking for a custom AI solution? Let's talk about how I can help you
-      achieve your goals.
-    cta_button_primary: Book a Call
-    cta_button_secondary: Contact Me
+    hero_title: Blog Topics
+    hero_subtitle: The technical domains I write about most often
+    cta_heading: Suggest A Topic
+    cta_text: Have a topic you'd like covered? Reach out and I'll add it to the roadmap.
+    cta_button_primary: Open Dashboard
+    cta_button_secondary: Contact
   projects:
     hero_title: Projects
-    hero_subtitle: A showcase of successful AI implementations and client work
+    hero_subtitle: Products, experiments, and production systems
     link_demo: View Demo →
     link_github: GitHub →
-    cta_heading: Want to Start Your Own Project?
-    cta_text: Let's collaborate to build innovative AI solutions that solve real
-      business problems.
-    cta_button_primary: Schedule Consultation
-    cta_button_secondary: View Services
+    cta_heading: Want your project featured?
+    cta_text: Sign in and publish your posts from the dashboard to showcase your work.
+    cta_button_primary: Open Dashboard
+    cta_button_secondary: View Topics
   contact:
     hero_title: Get in Touch
     hero_subtitle: Let's discuss how AI can transform your business
@@ -100,39 +97,67 @@ pages:
     alt_button: View Contact Page
 services:
   - title: AI Strategy & Consulting
-    description: Develop comprehensive AI strategies aligned with your business
-      goals. I help identify opportunities, assess feasibility, and create
-      roadmaps for successful AI implementation.
+    description: Frameworks for selecting use cases, evaluating model tradeoffs, and
+      setting implementation roadmaps.
     icon: 🎯
   - title: Machine Learning Solutions
-    description: Design and deploy custom machine learning models tailored to your
-      specific needs. From predictive analytics to recommendation systems, I
-      build solutions that deliver results.
+    description: End-to-end model design, training, evaluation, and deployment patterns
+      for practical product teams.
     icon: 🤖
   - title: Natural Language Processing
-    description: Implement NLP solutions including chatbots, sentiment analysis,
-      document processing, and language understanding systems to enhance
-      customer experience and operational efficiency.
+    description: RAG pipelines, prompt strategy, eval harnesses, and LLM application
+      architecture for production systems.
     icon: 💬
   - title: Computer Vision
-    description: Develop computer vision applications for image recognition, object
-      detection, video analysis, and visual quality control to automate visual
-      inspection tasks.
+    description: Practical visual AI use-cases, multimodal pipelines, and edge-friendly
+      deployment approaches.
     icon: 👁️
   - title: AI Integration & Deployment
-    description: Seamlessly integrate AI models into your existing systems. I ensure
-      smooth deployment, scalability, and maintenance of AI solutions in
-      production environments.
+    description: API design, observability, release workflows, and incident-safe rollout
+      strategies for AI systems.
     icon: ⚙️
   - title: Training & Workshops
-    description: Empower your team with AI knowledge through customized training
-      sessions and workshops. Build internal capability to sustain and grow your
-      AI initiatives.
+    description: Technical coaching and learning paths for AI + modern full-stack web
+      development teams.
     icon: 📚
   - title: AI Automation Audits
-    description: Comprehensive review of your existing workflows to identify
-      high-impact automation opportunities using AI
+    description: Structured audits to discover automation wins and map implementation
+      complexity.
     icon: 🚀
+blog:
+  posts:
+    - id: post-001
+      title: Building a Production-Ready RAG Stack with Node.js and Postgres
+      excerpt: A practical walkthrough of chunking, retrieval quality, observability,
+        and latency optimization for real-world RAG systems.
+      date: 2026-03-01
+      read_time: 8 min read
+      tags:
+        - AI
+        - RAG
+        - Node.js
+        - PostgreSQL
+    - id: post-002
+      title: Designing Pastel Tech UI Systems That Still Feel High Contrast
+      excerpt: How to build soft-color interfaces that remain accessible, modern, and
+        conversion-friendly.
+      date: 2026-02-24
+      read_time: 6 min read
+      tags:
+        - UI
+        - Design System
+        - CSS
+        - Accessibility
+    - id: post-003
+      title: Feature Flags for AI Products — Safer Releases, Faster Learning
+      excerpt: Release AI features progressively, isolate model changes, and ship with
+        confidence using a robust flag strategy.
+      date: 2026-02-16
+      read_time: 7 min read
+      tags:
+        - AI Ops
+        - Feature Flags
+        - Product Engineering
 projects:
   - title: E-commerce Recommendation Engine
     description: Built a personalized product recommendation system that increased
@@ -229,54 +254,52 @@ booking_text: Schedule a free 30-minute consultation to discuss how AI can
   transform your business.
 theme:
   colors:
-    primary: "#0a84ff"
-    primary_dark: "#0060c8"
-    secondary: "#f3f7fb"
-    accent: "#07a0ff"
-    text_dark: "#0b1220"
-    text_light: "#6b7280"
+    primary: "#4caf7a"
+    primary_dark: "#2f8f5a"
+    secondary: "#f0f8f3"
+    accent: "#8fd7b3"
+    text_dark: "#11281c"
+    text_light: "#4f6d5c"
     bg_white: "#ffffff"
-    bg_light: "#f7f9fc"
-    border: "#e6e9ee"
+    bg_light: "#f7fcf9"
+    border: "#d8efe0"
   shadows:
     small: 0 6px 20px rgba(11,18,32,0.06)
     large: 0 30px 60px rgba(11,18,32,0.08)
   typography:
-    font_family: '"-apple-system", BlinkMacSystemFont, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, "Noto Sans", sans-serif'
-    font_family_heading: '"SF Pro Display", "Inter", -apple-system,
-      BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    font_family: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
       sans-serif'
-    line_height: "1.38"
+    font_family_heading: '"Space Grotesk", "Inter", -apple-system,
+      BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    line_height: "1.5"
     font_size_base: 1rem
-    font_size_h1: 3.25rem
-    font_size_h2: 2.25rem
-    font_size_h3: 1.5rem
-    font_size_h4: 1.125rem
-    font_size_small: 0.875rem
+    font_size_h1: 3.3rem
+    font_size_h2: 2.4rem
+    font_size_h3: 1.35rem
+    font_size_h4: 1.12rem
+    font_size_small: 0.9rem
   layout:
-    container_max_width: 1400px
-    section_padding: 6rem
-    card_padding: 2.5rem
+    container_max_width: 1200px
+    section_padding: 5rem
+    card_padding: 1.5rem
   borders:
-    radius_small: 0.5rem
-    radius_medium: 0.75rem
-    radius_large: 1.5rem
+    radius_small: 0.65rem
+    radius_medium: 0.95rem
+    radius_large: 1.45rem
     radius_pill: 9999px
   buttons:
-    border_radius: 0.75rem
-    padding: 0.75rem 1.25rem
+    border_radius: 0.8rem
+    padding: 0.72rem 1.15rem
     font_weight: "600"
   navbar:
     height: auto
-    padding: 1rem 0
+    padding: 0.9rem 0
   transitions:
-    speed_fast: 0.12s
-    speed_normal: 0.22s
-    speed_slow: 0.35s
-    easing: cubic-bezier(0.2,0.8,0.2,1)
+    speed_fast: 0.14s
+    speed_normal: 0.24s
+    speed_slow: 0.34s
+    easing: cubic-bezier(0.2,0.85,0.32,1)
   meta:
-    vibe: premium, minimal, crisp
-    texture: paper-grain
-    description: Futuristic pastel dark green and pink palette with sleek, modern
-      typography and subtle neon glows
+    vibe: modern pastel tech blog
+    texture: frosted glass + soft gradients
+    description: Pastel green-first modern design system for AI and web dev publishing
