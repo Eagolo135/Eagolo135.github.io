@@ -110,7 +110,7 @@ function commitAndPushMain({ allowedFiles, commitMessage }) {
     throw new Error('No changes detected to commit.');
   }
 
-  const add = runCommand(`git add ${allowedFiles.map((file) => `"${file}"`).join(' ')}`);
+  const add = runCommand(`git add ${changed.map((file) => `"${file}"`).join(' ')}`);
   if (!add.ok) {
     throw new Error(`git add failed:\n${add.output}`);
   }

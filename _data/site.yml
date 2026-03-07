@@ -187,6 +187,16 @@ projects:
       - PostgreSQL
     demo_link: "#"
     github_link: "#"
+  - title: Embedded Systems Test Project
+    description: Prototype embedded system combining sensor data processing and
+      on-device ML for real-time analytics.
+    stack:
+      - C/C++
+      - Embedded Linux
+      - RTOS
+      - TensorFlow Lite
+    demo_link: "#"
+    github_link: "#"
 email: nicholasnelson1203@gmail.com
 phone: +1-862-224-7718
 formspree_endpoint: https://formspree.io/f/xpqjpvgn
